@@ -65,6 +65,7 @@
 #include <algorithm>
 #include "vts_audiosink_helper_functions.h"
 #include "vts_audiosink_parse_hfp.h"
+#include "vts_audiosink.h"
 
 using namespace com::rdk::hal;
 
@@ -227,7 +228,7 @@ bool vts_audiosink_helper_areElementsUnique(const std::vector<int>& values)
     return true;
 }
 
-bool vts_audiosink_helper_validatePropertyValue(int sink_id, const std::optional<PropertyValue>& propertyValue, const Property property)
+bool vts_audiosink_helper_validatePropertyValue(int sink_id, const std::optional<PropertyValue>& propertyValue, const audiosink::Property property)
 {
     if (!propertyValue.has_value() || !propertyValue->value.has_value())
     {
@@ -262,7 +263,7 @@ bool vts_audiosink_helper_validatePropertyValue(int sink_id, const std::optional
 
     switch (property)
     {
-        case Property::RESOURCE_ID:
+        case audiosink::Property::RESOURCE_ID:
              if(std::holds_alternative<int>(val) && std::get<int>(val) == sink_id)
              {
                 return true;
@@ -272,11 +273,11 @@ bool vts_audiosink_helper_validatePropertyValue(int sink_id, const std::optional
                 return false;
              }
 
-        case Property::REFERENCE_LEVEL:
+        case audiosink::Property::REFERENCE_LEVEL:
             return std::holds_alternative<int32_t>(val) &&
                    (std::get<int32_t>(val) == -31 || std::get<int32_t>(val) >= 1);
 
-        case Property::AV_SOURCE:
+        case audiosink::Property::AV_SOURCE:
             return std::holds_alternative<int32_t>(val) &&
                    (std::get<int32_t>(val) == static_cast<int32_t>(AVSource::AUTO) ||
                     std::get<int32_t>(val) == static_cast<int32_t>(AVSource::UNKNOWN) ||
@@ -287,17 +288,17 @@ bool vts_audiosink_helper_validatePropertyValue(int sink_id, const std::optional
                     (std::get<int32_t>(val) >= static_cast<int32_t>(AVSource::COMPOSITE_1) &&
                      std::get<int32_t>(val) <= static_cast<int32_t>(AVSource::COMPOSITE_5)));
 
-        case Property::RENDER_LATENCY_NS:
+        case audiosink::Property::RENDER_LATENCY_NS:
             return std::holds_alternative<int32_t>(val) && std::get<int32_t>(val) >= 0;
 
-        case Property::QUEUE_DEPTH_NS:
+        case audiosink::Property::QUEUE_DEPTH_NS:
             return std::holds_alternative<int32_t>(val) && std::get<int32_t>(val) >= 0;
 
-        case Property::MIXER_ID:
+        case audiosink::Property::MIXER_ID:
             return std::holds_alternative<std::int32_t>(val) &&
                    (std::get<std::int32_t>(val) == 0 || std::get<std::int32_t>(val) >= 1);
 
-        case Property::DOLBY_ATMOS_LOCK:
+        case audiosink::Property::DOLBY_ATMOS_LOCK:
             return std::holds_alternative<int32_t>(val) &&
                    (std::get<int32_t>(val) == 0 || std::get<int32_t>(val) == 1);
 
@@ -306,20 +307,6 @@ bool vts_audiosink_helper_validatePropertyValue(int sink_id, const std::optional
     }
 }
 
-size_t vts_bytesPerSample(audiodecoder::PCMFormat format)
-{
-    switch (format) {
-        case audiodecoder::PCMFormat::F64LE: case audiodecoder::PCMFormat::F64BE: return 8;
-        case audiodecoder::PCMFormat::F32LE: case audiodecoder::PCMFormat::F32BE: return 4;
-        case audiodecoder::PCMFormat::S32LE: case audiodecoder::PCMFormat::S32BE: case audiodecoder::PCMFormat::U32LE: case audiodecoder::PCMFormat::U32BE: return 4;
-        case audiodecoder::PCMFormat::S24_32LE: case audiodecoder::PCMFormat::S24_32BE: case audiodecoder::PCMFormat::U24_32LE: case audiodecoder::PCMFormat::U24_32BE: return 4;
-        case audiodecoder::PCMFormat::S24LE: case audiodecoder::PCMFormat::S24BE: case audiodecoder::PCMFormat::U24LE: case audiodecoder::PCMFormat::U24BE:
-        case audiodecoder::PCMFormat::S20LE: case audiodecoder::PCMFormat::S20BE: case audiodecoder::PCMFormat::U20LE: case audiodecoder::PCMFormat::U20BE:
-        case audiodecoder::PCMFormat::S18LE: case audiodecoder::PCMFormat::S18BE: case audiodecoder::PCMFormat::U18LE: case audiodecoder::PCMFormat::U18BE: return 3;
-        case audiodecoder::PCMFormat::S16LE: case audiodecoder::PCMFormat::S16BE: case audiodecoder::PCMFormat::U16LE: case audiodecoder::PCMFormat::U16BE: return 2;
-        case audiodecoder::PCMFormat::S8: case audiodecoder::PCMFormat::U8: return 1;
-    }
-}
 
 /** @} */ // End of AUDIO_SINK_HALTEST_HELPER
 /** @} */ // End of AUDIO_SINK_HALTEST

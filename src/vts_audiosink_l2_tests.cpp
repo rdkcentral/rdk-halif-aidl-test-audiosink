@@ -81,18 +81,18 @@
 #include "vts_audiosink_parse_hfp.h"
 #include "vts_audiosink.h"
 
-static std::multimap<Property, int32_t> validIntPropertyReady =
+static std::multimap<audiosink::Property, int32_t> validIntPropertyReady =
 {
-    {Property::REFERENCE_LEVEL, -31},
-    {Property::MIXER_ID , 0},
-    {Property::AV_SOURCE , int32_t(static_cast<int32_t>(AVSource::AUTO))},
-    {Property::AV_SOURCE, int32_t(static_cast<int32_t>(AVSource::UNKNOWN))},
-    {Property::AV_SOURCE, int32_t(static_cast<int32_t>(AVSource::IP))},
-    {Property::AV_SOURCE, int32_t(static_cast<int32_t>(AVSource::TUNER))},
-    {Property::AV_SOURCE, int32_t(static_cast<int32_t>(AVSource::SYSTEM))},
-    {Property::AV_SOURCE, int32_t(static_cast<int32_t>(AVSource::HDMI_1))},
-    {Property::DOLBY_ATMOS_LOCK, 0},
-    {Property::DOLBY_ATMOS_LOCK, 1},
+    {audiosink::Property::REFERENCE_LEVEL, -31},
+    {audiosink::Property::MIXER_ID , 0},
+    {audiosink::Property::AV_SOURCE , int32_t(static_cast<int32_t>(AVSource::AUTO))},
+    {audiosink::Property::AV_SOURCE, int32_t(static_cast<int32_t>(AVSource::UNKNOWN))},
+    {audiosink::Property::AV_SOURCE, int32_t(static_cast<int32_t>(AVSource::IP))},
+    {audiosink::Property::AV_SOURCE, int32_t(static_cast<int32_t>(AVSource::TUNER))},
+    {audiosink::Property::AV_SOURCE, int32_t(static_cast<int32_t>(AVSource::SYSTEM))},
+    {audiosink::Property::AV_SOURCE, int32_t(static_cast<int32_t>(AVSource::HDMI_1))},
+    {audiosink::Property::DOLBY_ATMOS_LOCK, 0},
+    {audiosink::Property::DOLBY_ATMOS_LOCK, 1},
 };
 
 /* Test class registration with UT_Core */
@@ -146,8 +146,8 @@ VTS_L2_AudioSink() : UTCore() {}
         UT_ASSERT_TRUE(eventListener->checkStateTransistion(oldState, intermediateState));
         UT_ASSERT_TRUE(controlListener->checkStateTransistion(oldState, intermediateState));
 
-        eventListener->waitForState(newState, std::chrono::milliseconds(MAX_FINAL_STATE_WAIT_MS));
-        controlListener->waitForState(newState, std::chrono::milliseconds(MAX_FINAL_STATE_WAIT_MS));
+        eventListener->waitForState(newState, std::chrono::milliseconds(AUDIO_SINK_MAX_FINAL_STATE_WAIT_MS));
+        controlListener->waitForState(newState, std::chrono::milliseconds(AUDIO_SINK_MAX_FINAL_STATE_WAIT_MS));
 
         AUDIOSINK_GET_STATE(sink, currentState);
 

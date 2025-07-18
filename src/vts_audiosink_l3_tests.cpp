@@ -87,7 +87,6 @@
 #include "vts_avbuffer.h"
 
 #include "IAVBufferHelper.h"
-#include "vts_audiodecoder_parse_testconfig.h"
 #include "vts_audiodecoder.h"
 
 static const char *gModuleName = "IAudioSinkManager";
@@ -130,7 +129,7 @@ public:
              sp<AudioSinkControllerListener> controlListener,
              sp<AudioSinkEventListener> eventListener, sp<AudioDecoderControllerListener> decoderControlListener,
              sp<IAVBuffer> AVBufferManager, IAudioDecoder::Id decoderId,
-             bool secureDecode, bool isTunnel, testConfiguration_t config)
+             bool secureDecode, bool isTunnel, audioTestConfiguration_t config)
     {
         mSinkId = sinkId;
         mDecoderId = decoderId;
@@ -166,7 +165,7 @@ private:
     sp<AudioDecoderControllerListener> mdecoderControlListener;
     bool mSecureBuffer;
     bool mIsTunnel;
-    testConfiguration_t mTestConfiguration;
+    audioTestConfiguration_t mTestConfiguration;
 
     void audioSinkNonTunnelTest()
     {
@@ -193,7 +192,7 @@ private:
             /* Start the decoder */
             AUDIOSINK_START_SUCCESS(mSinkHandle, audioSinkController, true);
 
-            while(mdecoderControlListener->getNextFrame(decodedFrame, 500, true))
+            while(mdecoderControlListener->getNextFrame(decodedFrame, true))
             {
                 frameCount++;
                 if (frameCount == 1)
@@ -350,8 +349,8 @@ public:
         std::vector<IAudioSink::Id> sinkIds;
         vector<IAudioDecoder::Id> decoderIds;
 
-        mAVBufferManager = vts_avbuffer_getService();
-        gTestConfiguration = vts_kvp_create_instance(VTS_TEST_CONFIG_PATH);
+        mAVBufferManager = vts_getAVBufferService();
+        gAudioSinkTestConfiguration = vts_kvp_create_instance(AUDIO_DECODER_TEST_CONFIG_PATH);
 
         mAVbufferHelper = getAVBufferHelperInstance();
 
@@ -418,8 +417,8 @@ public:
         UT_ASSERT_TRUE(eventListener->checkStateTransistion(oldState, intermediateState));
         UT_ASSERT_TRUE(controlListener->checkStateTransistion(oldState, intermediateState));
 
-        eventListener->waitForState(newState, std::chrono::milliseconds(MAX_FINAL_STATE_WAIT_MS));
-        controlListener->waitForState(newState, std::chrono::milliseconds(MAX_FINAL_STATE_WAIT_MS));
+        eventListener->waitForState(newState, std::chrono::milliseconds(AUDIO_SINK_MAX_FINAL_STATE_WAIT_MS));
+        controlListener->waitForState(newState, std::chrono::milliseconds(AUDIO_SINK_MAX_FINAL_STATE_WAIT_MS));
 
         AUDIOSINK_GET_STATE(sink, currentState);
 
@@ -455,7 +454,7 @@ public:
         return true;
     }
 
-    void runSequentialSink(testConfiguration_t& testConfig, bool secureDecode, bool isTunnel)
+    void runSequentialSink(audioTestConfiguration_t& testConfig, bool secureDecode, bool isTunnel)
     {
         try {
             for (const auto& [_sinkId, sinkHandle, controlListener, eventListener] : mAudioSinkList)
@@ -495,10 +494,10 @@ public:
                 HeapMetrics beforeHeapMetrics, afterHeapMetrics;
                 AVBUFFER_GETMETRICS(mAVBufferManager, secureDecode, beforeHeapMetrics);
 
-                DecoderTest decodeTest(decoderId, decoderHandle, decoderControlListener,
+                audioDecoderTest decodeTest(decoderId, decoderHandle, decoderControlListener,
                                     decoderEventListener, mAVBufferManager, mAVbufferHelper, secureDecode, testConfig);
 
-                std::thread decodeThread(&DecoderTest::run, &decodeTest, false);
+                std::thread decodeThread(&audioDecoderTest::run, &decodeTest, false);
 
                 SinkTest sinkTest(_sinkId, sinkHandle, controlListener, eventListener, decoderControlListener,
                                 mAVBufferManager, decoderId, secureDecode, isTunnel, testConfig);
@@ -525,13 +524,13 @@ public:
         }
     }
 
-    void runConcurrentSink(testConfiguration_t& testConfig, bool secureDecode, bool isTunnel)
+    void runConcurrentSink(audioTestConfiguration_t& testConfig, bool secureDecode, bool isTunnel)
     {
         try {
             HeapMetrics beforeHeapMetrics, afterHeapMetrics;
             vector<thread> decoderThreads;
             vector<thread> sinkThreads;
-            vector<unique_ptr<DecoderTest>> decoderTests;
+            vector<unique_ptr<audioDecoderTest>> decoderTests;
             vector<unique_ptr<SinkTest>> sinkTests;
             vector<pair<IAudioDecoder::Id, sp<AudioDecoderControllerListener>>> availableDecoderList;
 
@@ -543,11 +542,11 @@ public:
                 // Check if _decoderId is available in availableDecoderIds
                 if (isDecoderUsable(_decoderId))
                 {
-                   auto decoderTest = make_unique<DecoderTest>(_decoderId, decoderHandle,
+                   auto decoderTest = make_unique<audioDecoderTest>(_decoderId, decoderHandle,
                                                                 controlListener, eventListener,
                                                                 mAVBufferManager, mAVbufferHelper,
                                                                 secureDecode, testConfig);
-                    decoderThreads.emplace_back(&DecoderTest::run, decoderTest.get(), false);
+                    decoderThreads.emplace_back(&audioDecoderTest::run, decoderTest.get(), false);
 
                     decoderTests.push_back(move(decoderTest));
 
@@ -606,9 +605,9 @@ public:
 
     void runSingleProcessTest(const char *testName, bool isSecureMode, bool isTunnel, bool isConcurrentMode)
     {
-        vector<testConfiguration_t> testConfiguration;
+        vector<audioTestConfiguration_t> testConfiguration;
 
-        vts_audiodecoder_parse_testconfig(gTestConfiguration, gAudioModuleName, gTestGroup, testName, testConfiguration);
+        vts_audiodecoder_parse_testconfig(gAudioSinkTestConfiguration, gAudioModuleName, gTestGroup, testName, testConfiguration);
 
         if(isSecureMode && !gAudiosinks_hfp[0].supportsSecure)
         {

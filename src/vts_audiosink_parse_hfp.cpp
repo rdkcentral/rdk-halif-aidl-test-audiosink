@@ -61,7 +61,7 @@
  * @file vts_audiosink_parse_hfp.cpp
  *
  */
-
+#include "vts_audiosink.h"
 #include "vts_audiosink_helper_functions.h"
 #include "vts_audiosink_parse_hfp.h"
 

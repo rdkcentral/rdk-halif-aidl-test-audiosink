@@ -83,34 +83,34 @@
 #include "vts_audiosink_parse_hfp.h"
 #include "vts_audiosink.h"
 
-static std::multimap<Property, int32_t> validIntPropertyReady =
+static std::multimap<audiosink::Property, int32_t> validIntPropertyReady =
 {
-    {Property::REFERENCE_LEVEL, -31},
-    {Property::MIXER_ID , 0},
-    {Property::AV_SOURCE , int32_t(static_cast<int32_t>(AVSource::AUTO))},
-    {Property::AV_SOURCE, int32_t(static_cast<int32_t>(AVSource::UNKNOWN))},
-    {Property::AV_SOURCE, int32_t(static_cast<int32_t>(AVSource::IP))},
-    {Property::AV_SOURCE, int32_t(static_cast<int32_t>(AVSource::TUNER))},
-    {Property::AV_SOURCE, int32_t(static_cast<int32_t>(AVSource::SYSTEM))},
-    {Property::AV_SOURCE, int32_t(static_cast<int32_t>(AVSource::HDMI_1))},
-    {Property::DOLBY_ATMOS_LOCK, 0},
-    {Property::DOLBY_ATMOS_LOCK, 1},
+    {audiosink::Property::REFERENCE_LEVEL, -31},
+    {audiosink::Property::MIXER_ID , 0},
+    {audiosink::Property::AV_SOURCE , int32_t(static_cast<int32_t>(AVSource::AUTO))},
+    {audiosink::Property::AV_SOURCE, int32_t(static_cast<int32_t>(AVSource::UNKNOWN))},
+    {audiosink::Property::AV_SOURCE, int32_t(static_cast<int32_t>(AVSource::IP))},
+    {audiosink::Property::AV_SOURCE, int32_t(static_cast<int32_t>(AVSource::TUNER))},
+    {audiosink::Property::AV_SOURCE, int32_t(static_cast<int32_t>(AVSource::SYSTEM))},
+    {audiosink::Property::AV_SOURCE, int32_t(static_cast<int32_t>(AVSource::HDMI_1))},
+    {audiosink::Property::DOLBY_ATMOS_LOCK, 0},
+    {audiosink::Property::DOLBY_ATMOS_LOCK, 1},
 };
 
-static std::multimap<Property, int32_t> invalidIntPropertyReady =
+static std::multimap<audiosink::Property, int32_t> invalidIntPropertyReady =
 {
-    {Property::REFERENCE_LEVEL, -100},
-    {Property::MIXER_ID, -2},
-    {Property::AV_SOURCE , int32_t(static_cast<int32_t>(AVSource::AUTO))-1},
-    {Property::AV_SOURCE , int32_t(static_cast<int32_t>(AVSource::COMPOSITE_5 ))+1},
-    {Property::DOLBY_ATMOS_LOCK, -1},
+    {audiosink::Property::REFERENCE_LEVEL, -100},
+    {audiosink::Property::MIXER_ID, -2},
+    {audiosink::Property::AV_SOURCE , int32_t(static_cast<int32_t>(AVSource::AUTO))-1},
+    {audiosink::Property::AV_SOURCE , int32_t(static_cast<int32_t>(AVSource::COMPOSITE_5 ))+1},
+    {audiosink::Property::DOLBY_ATMOS_LOCK, -1},
 };
 
-static std::multimap<Property, int32_t> setIntPropertyReadonly =
+static std::multimap<audiosink::Property, int32_t> setIntPropertyReadonly =
 {
-    {Property::RESOURCE_ID, 1},
-    {Property::RENDER_LATENCY_NS , 2},
-    {Property::QUEUE_DEPTH_NS , 3},
+    {audiosink::Property::RESOURCE_ID, 1},
+    {audiosink::Property::RENDER_LATENCY_NS , 2},
+    {audiosink::Property::QUEUE_DEPTH_NS , 3},
 };
 
 /* Test class registration with UT_Core */
@@ -273,7 +273,7 @@ UT_ADD_TEST(VTS_L1_AudioSink, getAudioSink_pos)
     std::vector<IAudioSink::Id> sinkIds;
     std::optional<PropertyValue> resource_id_1;
     std::optional<PropertyValue> resource_id_2;
-    Property property = Property::RESOURCE_ID;
+    audiosink::Property property = audiosink::Property::RESOURCE_ID;
 
     /* Get the Audio decoder IDs */
     AUDIOSINK_MANAGER_GETAUDIOSINKIDS(sinkIds);
@@ -373,7 +373,7 @@ UT_ADD_TEST(VTS_L1_AudioSink, getAudioSink_neg)
  */
 UT_ADD_TEST(VTS_L1_AudioSink, getCapabilities_pos)
 {
-    Capabilities capabilities;
+    audiosink::Capabilities capabilities;
     std::vector<IAudioSink::Id> sinkIds;
     sp<IAudioSink> audioSink;
 
@@ -421,8 +421,8 @@ UT_ADD_TEST(VTS_L1_AudioSink, getProperty_pos)
 
     std::vector<IAudioSink::Id> sinkIds;
     sp<IAudioSink> audioSink;
-    std::vector<Property> testProperties = {Property::RESOURCE_ID, Property::REFERENCE_LEVEL, Property::RENDER_LATENCY_NS, Property::QUEUE_DEPTH_NS,
-                                            Property::MIXER_ID , Property::AV_SOURCE , Property::DOLBY_ATMOS_LOCK};
+    std::vector<audiosink::Property> testProperties = {audiosink::Property::RESOURCE_ID, audiosink::Property::REFERENCE_LEVEL, audiosink::Property::RENDER_LATENCY_NS, audiosink::Property::QUEUE_DEPTH_NS,
+                                            audiosink::Property::MIXER_ID , audiosink::Property::AV_SOURCE , audiosink::Property::DOLBY_ATMOS_LOCK};
     ::android::binder::Status status;
 
     /* Get the Audio sink IDs */
@@ -467,8 +467,8 @@ UT_ADD_TEST(VTS_L1_AudioSink, getProperty_neg)
     std::vector<IAudioSink::Id> sinkIds;
     sp<IAudioSink> audioSink;
     std::optional<PropertyValue> propertyValue;
-    int32_t firstValue = static_cast<int32_t>(Property::RESOURCE_ID);
-    Property Invalidproperty = static_cast<Property>(firstValue - 1);
+    int32_t firstValue = static_cast<int32_t>(audiosink::Property::RESOURCE_ID);
+    audiosink::Property Invalidproperty = static_cast<audiosink::Property>(firstValue - 1);
     ::android::binder::Status status;
 
     /* Get the Audio sink IDs */
