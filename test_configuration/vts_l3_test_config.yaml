@@ -6,7 +6,3 @@ include_3: test_configuration/vts_l3_Decode_Flush.yaml
 include_4: test_configuration/vts_l3_Decode_EOS.yaml
 include_5: test_configuration/vts_l3_Decode_Underflow.yaml
 
-IAudioDecoderManager:
-  stream_download_path: "http://<>/streams" #`URL` path to download the audio test streams
-  input_streams_path: "assets/streams/input" #Target path where input streams are stored
-  reference_streams_path: "assets/streams/reference/" #Target path for reference PCM streams

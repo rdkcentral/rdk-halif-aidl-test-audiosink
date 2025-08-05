@@ -1,4 +1,7 @@
 IAudioDecoderManager:
+  stream_download_path: "http://<>/streams" #`URL` path to download the audio test streams
+  input_streams_path: "assets/streams/input" #Target path where input streams are stored
+  reference_streams_path: "assets/streams/reference/" #Target path for reference PCM streams
   L3: #Test Level
     Decode_Underflow: #Test Name
       Controls:
