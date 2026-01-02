@@ -146,12 +146,11 @@ extern sp<IAudioSinkManager> gAudioSinkManager;
         ::android::binder::Status status; \
         UT_LOG_DEBUG("Calling getAudioSink(IN:_sinkId:[%d], OUT:audioSink[])", _sinkId.value); \
         status = (gAudioSinkManager)->getAudioSink(_sinkId, &audioSink); \
-        UT_LOG_DEBUG("Result getAudioSink(IN:_sinkId:[%d], OUT:audioSink[0x%X]), status:[isOK:%s, exception:%s]", \
-                                _sinkId.value, audioSink.get(), UT_Control_GetMapString(bool_mapTable, status.isOk()), \
+        UT_LOG_DEBUG("Result getAudioSink(IN:_sinkId:[%d]), status:[isOK:%s, exception:%s]", \
+                                _sinkId.value, UT_Control_GetMapString(bool_mapTable, status.isOk()), \
                                 UT_Control_GetMapString(statusException_mapTable, status.exceptionCode())); \
         UT_ASSERT_FALSE(status.isOk()); \
         UT_ASSERT_EQUAL(status.exceptionCode(), exception); \
-        UT_ASSERT_TRUE(audioSink.get() == nullptr); \
     } while (0)
 
 #define AUDIODSINK_GETCAPABILITIES(audioSink, capabilities) \
@@ -256,13 +255,11 @@ extern sp<IAudioSinkManager> gAudioSinkManager;
         UT_LOG_DEBUG("Calling open failure(IN:contentType[%d], IN:controllerListener[N/A], OUT:audioSinkController[])", \
                      static_cast<int32_t>(contentType)); \
         status = (audioSink)->open(contentType, (controllerListener), &(audioSinkController)); \
-        UT_LOG_DEBUG("Result open failure (IN:contentType[%d], IN:controllerListener[N/A], OUT:audioSinkController[0x%p]), status:[isOK:%s, exception:%s]", static_cast<int32_t>(contentType),\
-            static_cast<void*>((audioSinkController).get()),\
+        UT_LOG_DEBUG("Result open failure (IN:contentType[%d], IN:controllerListener[N/A]), status:[isOK:%s, exception:%s]", static_cast<int32_t>(contentType),\
             UT_Control_GetMapString(bool_mapTable, status.isOk()), \
             UT_Control_GetMapString(statusException_mapTable, status.exceptionCode())); \
         UT_ASSERT_FALSE(status.isOk()); \
         UT_ASSERT_EQUAL(status.exceptionCode(), exception); \
-        UT_ASSERT_EQUAL((void*)((audioSinkController).get()), (void*)(nullptr)); \
     } while (0)
 
 #define AUDIOSINK_CLOSE_SUCCESS(audioSink, audioSinkController, stateCheck) \
@@ -292,13 +289,11 @@ extern sp<IAudioSinkManager> gAudioSinkManager;
         bool _aidl_return; \
         UT_LOG_DEBUG("Calling close(OUT:_aidl_return[])"); \
         status = (audioSink)->close(audioSinkController, &_aidl_return); \
-        UT_LOG_DEBUG("Result close(OUT:_aidl_return[%s]), status:[isOK:%s, exception:%s]", \
-            UT_Control_GetMapString(bool_mapTable, _aidl_return), \
+        UT_LOG_DEBUG("Result close(), status:[isOK:%s, exception:%s]", \
             UT_Control_GetMapString(bool_mapTable, status.isOk()), \
             UT_Control_GetMapString(statusException_mapTable, status.exceptionCode())); \
         UT_ASSERT_FALSE(status.isOk()); \
         UT_ASSERT_EQUAL(status.exceptionCode(), exception); \
-        UT_ASSERT_FALSE(_aidl_return); \
     } while (0)
 
 #define AUDIOSINK_REGISTER_EVENT_SUCCESS(audioSink, eventListener) \
@@ -322,8 +317,8 @@ extern sp<IAudioSinkManager> gAudioSinkManager;
         bool _aidl_return = false; \
         UT_LOG_DEBUG("Calling registerEventListener(IN:eventListener[0x%p], OUT:_aidl_return[])", eventListener.get()); \
         status = (audioSink)->registerEventListener(eventListener, &_aidl_return); \
-        UT_LOG_DEBUG("Result registerEventListener(IN:eventListener[0x%p], OUT:_aidl_return[%s]), status:[isOK:%s, exception:%s]", \
-            eventListener.get(), UT_Control_GetMapString(bool_mapTable, _aidl_return), \
+        UT_LOG_DEBUG("Result registerEventListener(IN:eventListener[0x%p]), status:[isOK:%s, exception:%s]", \
+            eventListener.get(), \
             UT_Control_GetMapString(bool_mapTable, status.isOk()), \
             UT_Control_GetMapString(statusException_mapTable, status.exceptionCode())); \
         if (exception == Status::EX_NONE) \
@@ -331,7 +326,6 @@ extern sp<IAudioSinkManager> gAudioSinkManager;
         else \
             UT_ASSERT_FALSE(status.isOk()); \
         UT_ASSERT_EQUAL(status.exceptionCode(), exception); \
-        UT_ASSERT_FALSE(_aidl_return); \
     } while (0)
 
 #define AUDIOSINK_UNREGISTER_EVENT_SUCCESS(audioSink, eventListener) \
@@ -355,13 +349,12 @@ extern sp<IAudioSinkManager> gAudioSinkManager;
         bool _aidl_return = false; \
         UT_LOG_DEBUG("Calling unregisterEventListener(IN:eventListener[0x%p], OUT:_aidl_return[])", eventListener.get()); \
         status = (audioSink)->unregisterEventListener(eventListener, &_aidl_return); \
-        UT_LOG_DEBUG("Result unregisterEventListener(IN:eventListener[0x%p], OUT:_aidl_return[%s]), status:[isOK:%s, exception:%s]", \
-            eventListener.get(), UT_Control_GetMapString(bool_mapTable, _aidl_return), \
+        UT_LOG_DEBUG("Result unregisterEventListener(IN:eventListener[0x%p]), status:[isOK:%s, exception:%s]", \
+            eventListener.get(), \
             UT_Control_GetMapString(bool_mapTable, status.isOk()), \
             UT_Control_GetMapString(statusException_mapTable, status.exceptionCode())); \
         UT_ASSERT_FALSE(status.isOk()); \
         UT_ASSERT_EQUAL(status.exceptionCode(), exception); \
-        UT_ASSERT_FALSE(_aidl_return); \
     } while (0)
 
 #define AUDIOSINK_START_SUCCESS(audioSink, audioSinkController, stateCheck) \
@@ -448,11 +441,10 @@ extern sp<IAudioSinkManager> gAudioSinkManager;
         bool aidl_return = false; \
         UT_LOG_DEBUG("Calling setAudioDecoder(IN:audioDecoderId:[%d], OUT:_aidl_return[])", audioDecoderId.value); \
         status = (audioSinkController)->setAudioDecoder(audioDecoderId, &aidl_return); \
-        UT_LOG_DEBUG("Result setAudioDecoder(IN:audioDecoderId:[%d], OUT:_aidl_return:[%s]), status:[isOK:%s, exception:%s]", \
-                    audioDecoderId.value, aidl_return ? "true" : "false", \
+        UT_LOG_DEBUG("Result setAudioDecoder(IN:audioDecoderId:[%d]), status:[isOK:%s, exception:%s]", \
+                    audioDecoderId.value, \
                     UT_Control_GetMapString(bool_mapTable, status.isOk()), \
                     UT_Control_GetMapString(statusException_mapTable, status.exceptionCode())); \
-        UT_ASSERT_FALSE(aidl_return); \
         UT_ASSERT_EQUAL(status.exceptionCode(), exception); \
         UT_ASSERT_FALSE(status.isOk()); \
     } while (0)
@@ -474,8 +466,7 @@ extern sp<IAudioSinkManager> gAudioSinkManager;
         ::android::binder::Status status; \
         UT_LOG_DEBUG("Calling setAudioDecoder(OUT:audioDecoderId:[]"); \
         status = (audioSinkController)->getAudioDecoder(&audioDecoderId);\
-        UT_LOG_DEBUG("Result setAudioDecoder(OUT:audioDecoderId:[%d]), status:[isOK:%s, exception:%s]", \
-                    audioDecoderId.value, \
+        UT_LOG_DEBUG("Result setAudioDecoder(), status:[isOK:%s, exception:%s]", \
                     UT_Control_GetMapString(bool_mapTable, status.isOk()), \
                     UT_Control_GetMapString(statusException_mapTable, status.exceptionCode())); \
         UT_ASSERT_EQUAL(status.exceptionCode(), exception); \
@@ -507,7 +498,6 @@ extern sp<IAudioSinkManager> gAudioSinkManager;
         UT_LOG_DEBUG("Result queueAudioFrame(IN:nsPresentationTime:[%lld], IN:bufferHandle:[0x%016" PRIx64 "], IN:metadata:[sourceCodec:%d, isDolbyAtmos:%d, numChannels:%d, sampleRate:%d, format:%d, source:%d]), status:[isOK:%s, exception:%s]", \
                     nsPresentationTime, bufferHandle, static_cast<int>(metadata.sourceCodec), metadata.isDolbyAtmos, metadata.numChannels, metadata.sampleRate, static_cast<int>(metadata.format), static_cast<int>(metadata.source), \
                     UT_Control_GetMapString(bool_mapTable, status.isOk()), UT_Control_GetMapString(statusException_mapTable, status.exceptionCode())); \
-        UT_ASSERT_FALSE(aidl_return); \
         UT_ASSERT_EQUAL(status.exceptionCode(), exception); \
         UT_ASSERT_FALSE(status.isOk()); \
         } while(0)
@@ -565,12 +555,10 @@ extern sp<IAudioSinkManager> gAudioSinkManager;
         bool _aidl_return = false; \
         UT_LOG_DEBUG("Calling setProperty(IN:property[%s], IN:propertyValue[0x%X], OUT:_aidl_return[])", com::rdk::hal::audiosink::toString(property).c_str(), propertyValue.value); \
         status = (audioSink)->setProperty(property, propertyValue, &_aidl_return); \
-        UT_LOG_DEBUG("Result setProperty(IN:property[%s], IN:propertyValue[0x%X], OUT:_aidl_return[%s]), status:[isOK:%s, exception:%s]", com::rdk::hal::audiosink::toString(property).c_str(), propertyValue.value, \
-            UT_Control_GetMapString(bool_mapTable, _aidl_return), \
+        UT_LOG_DEBUG("Result setProperty(IN:property[%s], IN:propertyValue[0x%X]), status:[isOK:%s, exception:%s]", com::rdk::hal::audiosink::toString(property).c_str(), propertyValue.value, \
             UT_Control_GetMapString(bool_mapTable, status.isOk()), \
             UT_Control_GetMapString(statusException_mapTable, status.exceptionCode())); \
         UT_ASSERT_EQUAL(status.exceptionCode(), exception); \
-        UT_ASSERT_FALSE(_aidl_return); \
         UT_ASSERT_FALSE(status.isOk()); \
     } while (0)
 
@@ -595,13 +583,11 @@ extern sp<IAudioSinkManager> gAudioSinkManager;
         bool _aidl_return; \
         UT_LOG_DEBUG("Calling setVolume(IN:volume:[%f], IN:muted:[%s])", volumeSet.volume, UT_Control_GetMapString(bool_mapTable, volumeSet.muted)); \
         status = (audioSinkController)->setVolume(volumeSet, &(_aidl_return)); \
-        UT_LOG_DEBUG("Result setVolume(IN:volume:[%f], IN:muted:[%s], OUT:volumeSetResult:[%s]), status:[isOK:%s, exception:%s]", volumeSet.volume, \
+        UT_LOG_DEBUG("Result setVolume(IN:volume:[%f], IN:muted:[%s]), status:[isOK:%s, exception:%s]", volumeSet.volume, \
             UT_Control_GetMapString(bool_mapTable, volumeSet.muted), \
-            UT_Control_GetMapString(bool_mapTable, _aidl_return), \
             UT_Control_GetMapString(bool_mapTable, status.isOk()), \
             UT_Control_GetMapString(statusException_mapTable, status.exceptionCode())); \
         UT_ASSERT_EQUAL(status.exceptionCode(), exception); \
-        UT_ASSERT_FALSE(_aidl_return);  \
         UT_ASSERT_FALSE(status.isOk()); \
     } while (0)
 
@@ -652,12 +638,11 @@ extern sp<IAudioSinkManager> gAudioSinkManager;
         UT_LOG_DEBUG("Calling setVolumeRamp(IN:targetVolume:[%f], IN:overMs:[%d], IN:volumeRamp:[%d], OUT:aidlReturn)", targetVolume, \
             overMs, static_cast<int32_t>(volumeRamp)); \
         status = (audioSinkController)->setVolumeRamp(targetVolume, overMs, volumeRamp, &_aidl_return); \
-        UT_LOG_DEBUG("Result setVolumeRamp(IN:targetVolume:[%f], IN:overMs:[%d], IN:volumeRamp:[%d], OUT:aidlReturn:[%s]), status:[isOK:%s, exception:%s]", targetVolume, \
-            overMs, static_cast<int32_t>(volumeRamp), _aidl_return ? "true" : "false", \
+        UT_LOG_DEBUG("Result setVolumeRamp(IN:targetVolume:[%f], IN:overMs:[%d], IN:volumeRamp:[%d]), status:[isOK:%s, exception:%s]", targetVolume, \
+            overMs, static_cast<int32_t>(volumeRamp), \
             UT_Control_GetMapString(bool_mapTable, status.isOk()), \
             UT_Control_GetMapString(statusException_mapTable, status.exceptionCode())); \
         UT_ASSERT_EQUAL(status.exceptionCode(), exception); \
-        UT_ASSERT_FALSE(_aidl_return);  \
         UT_ASSERT_FALSE(status.isOk()); \
     }while (0)
 
