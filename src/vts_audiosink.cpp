@@ -866,11 +866,19 @@ void AudioSinkTest::audioSinkNonTunnelTest()
         {
             if (!mdecoderControlListener->getNextFrame(decodedFrame, 500, true))
             {
-                if (mdecoderControlListener->waitForEndOfStream(0))
+                if (!mdecoderControlListener->waitForEndOfStream(0))
+                {
+                    UT_LOG_ERROR(
+                        "[SinkID: %d] Neither a decoded frame nor EOS was received within 500 ms",
+                        mSinkId.value);
+                    UT_ASSERT_TRUE(false);
+                    continue;
+                }
+                // EOS may have arrived immediately after the final frame was queued.
+                if (!mdecoderControlListener->getNextFrame(decodedFrame, 0, true))
                 {
                     break;
                 }
-                continue;
             }
 
             bool result = false;
@@ -965,11 +973,19 @@ void AudioSinkTest::audioSinkTunnelTest()
         {
             if (!mdecoderControlListener->getNextFrame(decodedFrame, 500, true))
             {
-                if (mdecoderControlListener->waitForEndOfStream(0))
+                if (!mdecoderControlListener->waitForEndOfStream(0))
+                {
+                    UT_LOG_ERROR(
+                        "[SinkID: %d] Neither a decoded frame nor EOS was received within 500 ms",
+                        mSinkId.value);
+                    UT_ASSERT_TRUE(false);
+                    continue;
+                }
+                // EOS may have arrived immediately after the final frame was queued.
+                if (!mdecoderControlListener->getNextFrame(decodedFrame, 0, true))
                 {
                     break;
                 }
-                continue;
             }
 
             frameCount++;
