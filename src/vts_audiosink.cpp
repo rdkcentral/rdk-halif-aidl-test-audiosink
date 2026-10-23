@@ -862,8 +862,25 @@ void AudioSinkTest::audioSinkNonTunnelTest()
 
         setupAudioSink();
 
-        while(mdecoderControlListener->getNextFrame(decodedFrame, 500, true))
+        while (true)
         {
+            if (!mdecoderControlListener->getNextFrame(decodedFrame, 500, true))
+            {
+                if (!mdecoderControlListener->waitForEndOfStream(0))
+                {
+                    UT_LOG_ERROR(
+                        "[SinkID: %d] Neither a decoded frame nor EOS was received within 500 ms",
+                        mSinkId.value);
+                    UT_ASSERT_TRUE(false);
+                    continue;
+                }
+                // EOS may have arrived immediately after the final frame was queued.
+                if (!mdecoderControlListener->getNextFrame(decodedFrame, 0, true))
+                {
+                    break;
+                }
+            }
+
             bool result = false;
             frameCount++;
 
@@ -912,7 +929,7 @@ void AudioSinkTest::audioSinkNonTunnelTest()
             UT_LOG_INFO("[SinkID: %d] Render Latency: %lld ns", mSinkId.value, latencyValue->value->get<PropertyValue::Value::Tag::longValue>());
         }
 
-        /* Signal EOS to the sink after all frames have been queued */
+        /* Signal EOS to the sink after the decoder has completed and all frames were queued. */
         AUDIOSINK_SIGNAL_ENDOFSTREAM_SUCCESS(mAudioSinkController);
 
         /* Validate the callback */
@@ -952,8 +969,25 @@ void AudioSinkTest::audioSinkTunnelTest()
 
         setupAudioSink();
 
-        while(mdecoderControlListener->getNextFrame(decodedFrame, 500, true))
+        while (true)
         {
+            if (!mdecoderControlListener->getNextFrame(decodedFrame, 500, true))
+            {
+                if (!mdecoderControlListener->waitForEndOfStream(0))
+                {
+                    UT_LOG_ERROR(
+                        "[SinkID: %d] Neither a decoded frame nor EOS was received within 500 ms",
+                        mSinkId.value);
+                    UT_ASSERT_TRUE(false);
+                    continue;
+                }
+                // EOS may have arrived immediately after the final frame was queued.
+                if (!mdecoderControlListener->getNextFrame(decodedFrame, 0, true))
+                {
+                    break;
+                }
+            }
+
             frameCount++;
 
             if (frameCount == 1)
