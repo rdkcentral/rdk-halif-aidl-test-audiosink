@@ -975,6 +975,7 @@ public:
     }
 
     void run();
+    bool hasFrameOutputModeMismatch() const { return mFrameOutputModeMismatch; }
 
 private:
     IAudioSink::Id mSinkId;
@@ -988,6 +989,7 @@ private:
     bool mSecureBuffer;
     bool mIsTunnel;
     bool mClockInUse;
+    bool mFrameOutputModeMismatch = false;
     testConfiguration_t mTestConfiguration;
     sp<IAudioSinkController> mAudioSinkController;
     sp<IAVClock> mClock;
@@ -1003,6 +1005,9 @@ private:
     void tearDownAudioSink();
     void validateCallbacks(int64_t expectedFirstFramePTS, bool expectUnderflow, bool expectResume);
     void copyMetaData(const audiodecoder::FrameMetadata& source, audiodecoder::FrameMetadata& destination);
+    void queueDecodedFrameIfNonTunnel(const DecodedAudioFrame_t& decodedFrame,
+                                      audiodecoder::FrameMetadata& metadata,
+                                      bool& flushDone);
     void validateMetric();
 };
 
