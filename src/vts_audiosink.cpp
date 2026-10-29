@@ -1015,6 +1015,7 @@ void AudioSinkTest::audioSinkTunnelTest()
                 {
                     break;
                 }
+            }
             if (decodedFrame.isTunnel != mIsTunnel)
             {
                 mFrameOutputModeMismatch = true;
