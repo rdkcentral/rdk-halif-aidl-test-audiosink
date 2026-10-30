@@ -845,6 +845,38 @@ void AudioSinkTest::copyMetaData(const audiodecoder::FrameMetadata& source, audi
     destination.SoCPrivate = source.SoCPrivate;
 }
 
+void AudioSinkTest::queueDecodedFrameIfNonTunnel(const DecodedAudioFrame_t& decodedFrame,
+                                                  audiodecoder::FrameMetadata& metadata,
+                                                  bool& flushDone)
+{
+    if (decodedFrame.isTunnel)
+    {
+        return;
+    }
+
+    if (mTestConfiguration.sinkFlushPts > 0 &&
+        decodedFrame.framePTS >= mTestConfiguration.sinkFlushPts && !flushDone)
+    {
+        AUDIOSINK_FLUSH_SUCCESS(mSinkHandle, mAudioSinkController, true);
+        flushDone = true;
+    }
+
+    if (decodedFrame.isMetaAvailable)
+    {
+        copyMetaData(*decodedFrame.frameMetadata, metadata);
+    }
+
+    bool result = false;
+    AUDIOSINK_QUEUEAUDIOFRAME_SUCCESS(mAudioSinkController, decodedFrame.framePTS,
+                                      decodedFrame.frameBufferHandle, metadata, result);
+    if (!result)
+    {
+        UT_LOG_WARNING("[SinkID: %d] Failed to queue frame to audio sink, PTS: %lld, Buffer Handle: 0x%016" PRIx64,
+                       mSinkId.value, decodedFrame.framePTS, decodedFrame.frameBufferHandle);
+        AVBUFFER_FREE_SUCCESS(mAVBufferManager, decodedFrame.frameBufferHandle);
+    }
+}
+
 void AudioSinkTest::audioSinkNonTunnelTest()
 {
     try
@@ -862,9 +894,36 @@ void AudioSinkTest::audioSinkNonTunnelTest()
 
         setupAudioSink();
 
-        while(mdecoderControlListener->getNextFrame(decodedFrame, 500, true))
+        while (true)
         {
+            if (!mdecoderControlListener->getNextFrame(decodedFrame, 500, true))
+            {
+                if (!mdecoderControlListener->waitForEndOfStream(0))
+                {
+                    UT_LOG_ERROR(
+                        "[SinkID: %d] Neither a decoded frame nor EOS was received within 500 ms",
+                        mSinkId.value);
+                    UT_ASSERT_TRUE(false);
+                    continue;
+                }
+                // EOS may have arrived immediately after the final frame was queued.
+                if (!mdecoderControlListener->getNextFrame(decodedFrame, 0, true))
+                {
+                    break;
+                }
+            }
+
             bool result = false;
+            if (decodedFrame.isTunnel != mIsTunnel)
+            {
+                mFrameOutputModeMismatch = true;
+                if (!decodedFrame.isTunnel)
+                {
+                    AVBUFFER_FREE_SUCCESS(mAVBufferManager, decodedFrame.frameBufferHandle);
+                }
+                continue;
+            }
+
             frameCount++;
 
             if (frameCount == 1)
@@ -878,23 +937,7 @@ void AudioSinkTest::audioSinkNonTunnelTest()
                 }
             }
 
-            if(mTestConfiguration.sinkFlushPts > 0 && decodedFrame.framePTS >= mTestConfiguration.sinkFlushPts && !flushDone)
-            {
-                AUDIOSINK_FLUSH_SUCCESS(mSinkHandle, mAudioSinkController, true);
-                flushDone = true;
-            }
-
-            if(decodedFrame.isMetaAvailable)
-            {
-                copyMetaData(*decodedFrame.frameMetadata, metadata);
-            }
-
-            AUDIOSINK_QUEUEAUDIOFRAME_SUCCESS(mAudioSinkController, decodedFrame.framePTS, decodedFrame.frameBufferHandle, metadata, result);
-            if (!result)
-            {
-                UT_LOG_WARNING("[SinkID: %d] Failed to queue frame to audio sink, PTS: %lld, Buffer Handle: 0x%016" PRIx64, mSinkId.value, decodedFrame.framePTS, decodedFrame.frameBufferHandle);
-                AVBUFFER_FREE_SUCCESS(mAVBufferManager, decodedFrame.frameBufferHandle);
-            }
+            queueDecodedFrameIfNonTunnel(decodedFrame, metadata, flushDone);
 
             /* Intentional delay to starve the sink queue and trigger onAudioUnderflow.
              * decoderDelay is sourced from delay_between_decode_calls in the YAML
@@ -902,7 +945,7 @@ void AudioSinkTest::audioSinkNonTunnelTest()
              * The delay is applied here, in the sink queueing path, not in the decoder
              * submission path, because only a gap between queueAudioFrame calls can
              * empty the sink's internal PCM queue while the clock is running. */
-            if (mTestConfiguration.decoderDelay > 0)
+            if (!decodedFrame.isTunnel && mTestConfiguration.decoderDelay > 0)
             {
                 std::this_thread::sleep_for(std::chrono::milliseconds(mTestConfiguration.decoderDelay));
             }
@@ -912,11 +955,14 @@ void AudioSinkTest::audioSinkNonTunnelTest()
             UT_LOG_INFO("[SinkID: %d] Render Latency: %lld ns", mSinkId.value, latencyValue->value->get<PropertyValue::Value::Tag::longValue>());
         }
 
-        /* Signal EOS to the sink after all frames have been queued */
+        /* Signal EOS to the sink after the decoder has completed and all frames were queued. */
         AUDIOSINK_SIGNAL_ENDOFSTREAM_SUCCESS(mAudioSinkController);
 
-        /* Validate the callback */
-        validateCallbacks(firstFramePTS, mTestConfiguration.decoderDelay > 0, mTestConfiguration.decoderDelay > 0);
+        /* Validate callbacks only for the requested decoder output mode. */
+        if (!mFrameOutputModeMismatch)
+        {
+            validateCallbacks(firstFramePTS, mTestConfiguration.decoderDelay > 0, mTestConfiguration.decoderDelay > 0);
+        }
 
         /* Validate the metrics */
         validateMetric();
@@ -942,18 +988,44 @@ void AudioSinkTest::audioSinkTunnelTest()
     {
         Pool audioPool;
         PropertyValue avSourcePropertyValue;
-        audiodecoder::FrameMetadata metadata;
         DecodedAudioFrame_t decodedFrame;
         int32_t frameCount = 0;
         int64_t firstFramePTS = -1;
+        bool flushDone = false;
         avSourcePropertyValue.value = PropertyValue::Value::make<PropertyValue::Value::Tag::intValue>(int32_t(static_cast<int32_t>(AVSource::IP)));
 
         UT_LOG_INFO("[SinkID: %d] Start of Testing Stream: %s", mSinkId.value, mTestConfiguration.input.c_str());
 
         setupAudioSink();
 
-        while(mdecoderControlListener->getNextFrame(decodedFrame, 500, true))
+        while (true)
         {
+            if (!mdecoderControlListener->getNextFrame(decodedFrame, 500, true))
+            {
+                if (!mdecoderControlListener->waitForEndOfStream(0))
+                {
+                    UT_LOG_ERROR(
+                        "[SinkID: %d] Neither a decoded frame nor EOS was received within 500 ms",
+                        mSinkId.value);
+                    UT_ASSERT_TRUE(false);
+                    continue;
+                }
+                // EOS may have arrived immediately after the final frame was queued.
+                if (!mdecoderControlListener->getNextFrame(decodedFrame, 0, true))
+                {
+                    break;
+                }
+            }
+            if (decodedFrame.isTunnel != mIsTunnel)
+            {
+                mFrameOutputModeMismatch = true;
+                if (!decodedFrame.isTunnel)
+                {
+                    AVBUFFER_FREE_SUCCESS(mAVBufferManager, decodedFrame.frameBufferHandle);
+                }
+                continue;
+            }
+
             frameCount++;
 
             if (frameCount == 1)
@@ -966,9 +1038,12 @@ void AudioSinkTest::audioSinkTunnelTest()
                     break;
                 }
             }
-            if(decodedFrame.isMetaAvailable)
+
+            if (mTestConfiguration.sinkFlushPts > 0 &&
+                decodedFrame.framePTS >= mTestConfiguration.sinkFlushPts && !flushDone)
             {
-                copyMetaData(*decodedFrame.frameMetadata, metadata);
+                AUDIOSINK_FLUSH_SUCCESS(mSinkHandle, mAudioSinkController, true);
+                flushDone = true;
             }
 
             std::optional<PropertyValue> latencyValue;
@@ -979,8 +1054,11 @@ void AudioSinkTest::audioSinkTunnelTest()
         /* Signal EOS to the sink (0.21.0 requirement — identical behaviour in tunnel and non-tunnel modes) */
         AUDIOSINK_SIGNAL_ENDOFSTREAM_SUCCESS(mAudioSinkController);
 
-        /* Validate the callback */
-        validateCallbacks(firstFramePTS, mTestConfiguration.decoderDelay > 0, mTestConfiguration.decoderDelay > 0);
+        /* Validate callbacks only for the requested decoder output mode. */
+        if (!mFrameOutputModeMismatch)
+        {
+            validateCallbacks(firstFramePTS, mTestConfiguration.decoderDelay > 0, mTestConfiguration.decoderDelay > 0);
+        }
 
         /* Validate the metrics */
         validateMetric();
