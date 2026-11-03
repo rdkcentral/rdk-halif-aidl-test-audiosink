@@ -80,8 +80,8 @@ using namespace com::rdk::hal;
 struct platformCapabilitiesHFP
 {
     bool supportsLowLatency;
-    int32_t systemMixerSampleRateHz;
-    audiodecoder::PCMFormat systemMixerPCMFormat;
+    vector<int32_t> supportedSampleRatesHz;
+    vector<audiodecoder::PCMFormat> supportedPCMFormats;
     bool supportsPlanarFormat;
     bool supportsSoCProprietary;
     int32_t maxNumChannels;

@@ -93,8 +93,6 @@ static std::multimap<audiosink::Property, int32_t> validIntPropertyReady =
     {audiosink::Property::AV_SOURCE, int32_t(static_cast<int32_t>(AVSource::TUNER))},
     {audiosink::Property::AV_SOURCE, int32_t(static_cast<int32_t>(AVSource::SYSTEM))},
     {audiosink::Property::AV_SOURCE, int32_t(static_cast<int32_t>(AVSource::HDMI_1))},
-    {audiosink::Property::DOLBY_ATMOS_LOCK, 0},
-    {audiosink::Property::DOLBY_ATMOS_LOCK, 1},
 };
 
 static std::multimap<audiosink::Property, int32_t> readOnlyProperty =
@@ -110,7 +108,6 @@ static std::multimap<audiosink::Property, int32_t> invalidIntPropertyReady =
     {audiosink::Property::MIXER_ID, -2},
     {audiosink::Property::AV_SOURCE , int32_t(static_cast<int32_t>(AVSource::AUTO))-1},
     {audiosink::Property::AV_SOURCE , int32_t(static_cast<int32_t>(AVSource::COMPOSITE_5 ))+1},
-    {audiosink::Property::DOLBY_ATMOS_LOCK, -1},
 };
 
 /* Test class registration with UT_Core */
@@ -200,7 +197,7 @@ UT_ADD_TEST(VTS_L1_AudioSink, getAudioSinkIds_pos)
  *
  * This test verifies the functionality of the getPlatformCapabilities method in the AudioSinkManager service.
  * It checks whether the method correctly retrieves the platform capabilities and matches the expected values for
- * various attributes such as supportsLowLatency, systemMixerSampleRateHz, systemMixerPCMFormat, and supportsPlanarFormat.
+ * various attributes such as supportsLowLatency, supportedSampleRatesHz, supportedPCMFormats, and supportsPlanarFormat.
  *
  * **Test Group ID:** Basic: 01@n
  * **Test Case ID:** 002@n
@@ -216,8 +213,8 @@ UT_ADD_TEST(VTS_L1_AudioSink, getAudioSinkIds_pos)
  * | 01 | Verify that the AudioSinkManager service is not null | gAudioSinkManagerService = nullptr | Should not be null | Should be successful |
  * | 02 | Call getPlatformCapabilities method on AudioSinkManager service | platformCapabilities = uninitialized | status.isOk() = true | Should Pass |
  * | 03 | Check supportsLowLatency attribute against expected value | platformCapabilities.supportsLowLatency = value | platformCapabilities.supportsLowLatency = expectedSupportsLowLatency | Should Pass |
- * | 04 | Check systemMixerSampleRateHz attribute against expected value | platformCapabilities.systemMixerSampleRateHz = value | platformCapabilities.systemMixerSampleRateHz = expectedSystemMixerSampleRateHz | Should Pass |
- * | 05 | Check systemMixerPCMFormat attribute against expected value | platformCapabilities.systemMixerPCMFormat = value | platformCapabilities.systemMixerPCMFormat = expectedSystemMixerPCMFormat | Should Pass |
+ * | 04 | Check supportedSampleRatesHz attribute against expected values | platformCapabilities.supportedSampleRatesHz = list | platformCapabilities.supportedSampleRatesHz = expected list (order independent) | Should Pass |
+ * | 05 | Check supportedPCMFormats attribute against expected values | platformCapabilities.supportedPCMFormats = list | platformCapabilities.supportedPCMFormats = expected list (order independent) | Should Pass |
  * | 06 | Check supportsPlanarFormat attribute against expected value | platformCapabilities.supportsPlanarFormat = value | platformCapabilities.supportsPlanarFormat = expectedSupportsPlanarFormat | Should Pass |
  * | 07 | Validate SoC proprietary audio support | platformCapabilities.supportsSoCProprietary | platformCapabilities.supportsSoCProprietary = expectedSupportsSoCProprietary | Should Pass |
  * | 08 | Validate maximum supported channels | platformCapabilities.maxNumChannels | platformCapabilities.maxNumChannels = expectedMaxNumChannels | Should Pass |
@@ -231,8 +228,14 @@ UT_ADD_TEST(VTS_L1_AudioSink, getPlatformCapabilities_pos)
 
     /* Log platform capabilities for debugging */
     UT_LOG_INFO("lowlatency: %s", UT_Control_GetMapString(bool_mapTable, platformCapabilities.supportsLowLatency));
-    UT_LOG_INFO("samplerate: %d", platformCapabilities.systemMixerSampleRateHz);
-    UT_LOG_INFO("mixer_pcmformat: %d", platformCapabilities.systemMixerPCMFormat);
+    for (const auto& rate : platformCapabilities.supportedSampleRatesHz)
+    {
+        UT_LOG_INFO("supportedSampleRateHz: %d", rate);
+    }
+    for (const auto& format : platformCapabilities.supportedPCMFormats)
+    {
+        UT_LOG_INFO("supportedPCMFormat: %s", audiodecoder::toString(format).c_str());
+    }
     UT_LOG_INFO("supportsPlanarFormat: %s", UT_Control_GetMapString(bool_mapTable, platformCapabilities.supportsPlanarFormat));
     UT_LOG_INFO("supportsSoCProprietary: %s", UT_Control_GetMapString(bool_mapTable, platformCapabilities.supportsSoCProprietary));
     UT_LOG_INFO("maxNumChannels: %d", platformCapabilities.maxNumChannels);
@@ -422,7 +425,6 @@ UT_ADD_TEST(VTS_L1_AudioSink, getCapabilities_pos)
  * | 04 | Retrieve QUEUE_DEPTH_NS Property | property = QUEUE_DEPTH_NS | status.isOk() = true, aidlReturn.has_value() = true, aidlReturn->value > 0 | Should Pass |
  * | 05 | Retrieve MIXER_ID Property in READY State | property = MIXER_ID | status.isOk() = true, aidlReturn.has_value() = true, aidlReturn->value = 0 | Should Pass |
  * | 06 | Retrieve AV_SOURCE Property in READY State | property = AV_SOURCE | status.isOk() = true, aidlReturn.has_value() = true, aidlReturn->value = 0 | Should Pass |
- * | 07 | Retrieve DOLBY_ATMOS_LOCK Property in READY State | property = DOLBY_ATMOS_LOCK | status.isOk() = true, aidlReturn.has_value() = true, aidlReturn->value = 0 or 1 | Should Pass |
  */
 UT_ADD_TEST(VTS_L1_AudioSink, getProperty_pos)
 {
@@ -434,8 +436,7 @@ UT_ADD_TEST(VTS_L1_AudioSink, getProperty_pos)
                                                        audiosink::Property::RENDER_LATENCY_NS,
                                                        audiosink::Property::QUEUE_DEPTH_NS,
                                                        audiosink::Property::MIXER_ID ,
-                                                       audiosink::Property::AV_SOURCE ,
-                                                       audiosink::Property::DOLBY_ATMOS_LOCK};
+                                                       audiosink::Property::AV_SOURCE };
     ::android::binder::Status status;
 
     /* Get the Audio sink IDs */
@@ -501,7 +502,7 @@ UT_ADD_TEST(VTS_L1_AudioSink, getProperty_neg)
  * @brief Test the positive setting of properties on an audio sink in the READY state.
  *
  * This test verifies that various properties can be set on an audio sink when it is in the READY state.
- * It ensures that the properties REFERENCE_LEVEL, MIXER_ID, AV_SOURCE, and DOLBY_ATMOS_LOCK can be set
+ * It ensures that the properties REFERENCE_LEVEL, MIXER_ID and AV_SOURCE can be set
  * successfully and that the audio sink responds with the expected status and return values.
  *
  * **Test Group ID:** Basic: 01@n
@@ -519,7 +520,6 @@ UT_ADD_TEST(VTS_L1_AudioSink, getProperty_neg)
  * | 02 | Set REFERENCE_LEVEL to -31 in the READY state using setProperty. | property = REFERENCE_LEVEL, propertyValue = -31, aidl_return = false | status.isOk() = true, aidl_return = true | Should Pass |
  * | 03 | Set MIXER_ID to 0 in the READY state using setProperty. | property = MIXER_ID, propertyValue = 0, aidl_return = false | status.isOk() = true, aidl_return = true | Should Pass |
  * | 04 | Set AV_SOURCE to 0 in the READY state using setProperty. | property = AV_SOURCE, propertyValue = 0, aidl_return = false | status.isOk() = true, aidl_return = true | Should Pass |
- * | 05 | Enable DOLBY_ATMOS_LOCK by setting it to 1 in the READY state using setProperty. | property = DOLBY_ATMOS_LOCK, propertyValue = 1, aidl_return = false | status.isOk() = true, aidl_return = true | Should Pass |
  */
 UT_ADD_TEST(VTS_L1_AudioSink, setProperty_pos)
 {
@@ -542,7 +542,7 @@ UT_ADD_TEST(VTS_L1_AudioSink, setProperty_pos)
         AUDIOSINK_OPEN_SUCCESS(audioSink, com::rdk::hal::audiosink::ContentType::UNKNOWN, controllerListener, audioSinkController, true);
 
         /* set the properties which can be set after Ready */
-        AUDIOSINK_SETPROPERTY_LIST_SUCCESS(audioSink, validIntPropertyReady, intValue);
+        AUDIOSINK_SETPROPERTY_LIST_SUCCESS(audioSinkController, validIntPropertyReady, intValue);
 
         /* Start the sink */
         AUDIOSINK_START_SUCCESS(audioSink, audioSinkController, true);
@@ -551,7 +551,7 @@ UT_ADD_TEST(VTS_L1_AudioSink, setProperty_pos)
         AUDIOSINK_STOP_SUCCESS(audioSink, audioSinkController, true);
 
         /* set the properties which can be set after Ready */
-        AUDIOSINK_SETPROPERTY_LIST_SUCCESS(audioSink, validIntPropertyReady, intValue);
+        AUDIOSINK_SETPROPERTY_LIST_SUCCESS(audioSinkController, validIntPropertyReady, intValue);
 
         /* Close the sink */
         AUDIOSINK_CLOSE_SUCCESS(audioSink, audioSinkController, true);
@@ -582,7 +582,6 @@ UT_ADD_TEST(VTS_L1_AudioSink, setProperty_pos)
  * | 05 | Ensure the audio sink is in the READY state by stopping all controllers. | None | Controllers should be in READY state | Should be successful |
  * | 06 | Attempt to set AV_SOURCE to an invalid value (-1) in READY state. | property = AV_SOURCE, propertyValue = -1, aidl_return = false | aidl_return should be false | Should Fail |
  * | 07 | Ensure the audio sink is not in the READY state by starting all controllers. | None | Controllers should not be in READY state | Should be successful |
- * | 08 | Attempt to disable DOLBY_ATMOS_LOCK in a non-READY state. | property = DOLBY_ATMOS_LOCK, propertyValue = 0, aidl_return = false | aidl_return should be false | Should Fail |
  * | 09 | Attempt to set READONLY property RENDER_LATENCY_NS. | property = RENDER_LATENCY_NS, propertyValue = 0, aidl_return = false | aidl_return should be false | Should Fail |
  */
 UT_ADD_TEST(VTS_L1_AudioSink, setProperty_neg)
@@ -602,35 +601,35 @@ UT_ADD_TEST(VTS_L1_AudioSink, setProperty_neg)
         /* Get Audio sink handle */
         AUDIOSINK_MANAGER_GETAUDIOSINK(_sinkId, audioSink);
 
-        /*set valid properties in invalid state*/
-        AUDIOSINK_SETPROPERTY_LIST_FAILURE(audioSink, validIntPropertyReady, intValue, Status::EX_ILLEGAL_STATE);
+        /* setProperty() moved to IAudioSinkController in rdk-halif-aidl 0.23.0, so it cannot be
+         * called before open(); the "before open" invalid-state check no longer applies. */
 
         //set state to READY by invoking `open` (set-up)
         AUDIOSINK_OPEN_SUCCESS(audioSink, ContentType::UNKNOWN, controllerListener, audioSinkController, true);
 
          /* set the read only properties */
-        AUDIOSINK_SETPROPERTY_LIST_FAILURE(audioSink, readOnlyProperty, intValue, Status::EX_UNSUPPORTED_OPERATION);
+        AUDIOSINK_SETPROPERTY_LIST_FAILURE(audioSinkController, readOnlyProperty, intValue, Status::EX_UNSUPPORTED_OPERATION);
 
         /* set the properties which can be set after Ready */
-        AUDIOSINK_SETPROPERTY_LIST_FAILURE(audioSink, invalidIntPropertyReady, intValue, Status::EX_ILLEGAL_ARGUMENT);
+        AUDIOSINK_SETPROPERTY_LIST_FAILURE(audioSinkController, invalidIntPropertyReady, intValue, Status::EX_ILLEGAL_ARGUMENT);
 
         /* Start the sink */
         AUDIOSINK_START_SUCCESS(audioSink, audioSinkController, true);
 
         /* set the properties in invalid state */
-        AUDIOSINK_SETPROPERTY_LIST_FAILURE(audioSink, invalidIntPropertyReady, intValue, Status::EX_ILLEGAL_STATE);
+        AUDIOSINK_SETPROPERTY_LIST_FAILURE(audioSinkController, invalidIntPropertyReady, intValue, Status::EX_ILLEGAL_STATE);
 
         /* Stop the sink */
         AUDIOSINK_STOP_SUCCESS(audioSink, audioSinkController, true);
 
         /* set the properties which can be set after Ready */
-        AUDIOSINK_SETPROPERTY_LIST_FAILURE(audioSink, invalidIntPropertyReady, intValue, Status::EX_ILLEGAL_ARGUMENT);
+        AUDIOSINK_SETPROPERTY_LIST_FAILURE(audioSinkController, invalidIntPropertyReady, intValue, Status::EX_ILLEGAL_ARGUMENT);
 
         /* Close the sink */
         AUDIOSINK_CLOSE_SUCCESS(audioSink, audioSinkController, true);
 
         /* set the properties in invalid state */
-        AUDIOSINK_SETPROPERTY_LIST_FAILURE(audioSink, invalidIntPropertyReady, intValue, Status::EX_ILLEGAL_STATE);
+        AUDIOSINK_SETPROPERTY_LIST_FAILURE(audioSinkController, invalidIntPropertyReady, intValue, Status::EX_ILLEGAL_STATE);
     }
 }
 

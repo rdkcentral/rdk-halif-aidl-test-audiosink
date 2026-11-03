@@ -190,7 +190,7 @@ extern sp<IAudioSinkManager> gAudioSinkManager;
                 break; \
             case PropertyValue::Value::Tag::stringValue: \
                 UT_LOG_INFO("Result getProperty(IN:property[%s], OUT:propertyValue[%s]), status:[isOK:%s, exception:%s]", audiosink::toString(property).c_str(), \
-                propertyValue->value->get<PropertyValue::Value::Tag::stringValue>().string(), \
+                propertyValue->value->get<PropertyValue::Value::Tag::stringValue>().c_str(), \
                 UT_Control_GetMapString(bool_mapTable, status.isOk()), \
                 UT_Control_GetMapString(statusException_mapTable, status.exceptionCode())); \
                 break; \
@@ -639,13 +639,13 @@ extern sp<IAudioSinkManager> gAudioSinkManager;
         UT_ASSERT_EQUAL(status.exceptionCode(), exception); \
     } while (0)
 
-#define AUDIOSINK_SETPROPERTY_SUCCESS(audioSink, property, propertyValue) \
+#define AUDIOSINK_SETPROPERTY_SUCCESS(audioSinkController, property, propertyValue) \
     do { \
         ::android::binder::Status status; \
         bool _aidl_return; \
         UT_LOG_INFO("Calling setProperty(IN:property[%s], IN:propertyValue[0x%X], OUT:_aidl_return[])", com::rdk::hal::audiosink::toString(property).c_str(), \
                       propertyValue.value); \
-        status = (audioSink)->setProperty(property, propertyValue, &_aidl_return); \
+        status = (audioSinkController)->setProperty(property, propertyValue, &_aidl_return); \
         UT_LOG_INFO("Result setProperty(IN:property[%s], IN:propertyValue[0x%X], OUT:_aidl_return[%s]), status:[isOK:%s, exception:%s]", com::rdk::hal::audiosink::toString(property).c_str(), propertyValue.value, \
             UT_Control_GetMapString(bool_mapTable, _aidl_return), \
             UT_Control_GetMapString(bool_mapTable, status.isOk()), \
@@ -655,12 +655,12 @@ extern sp<IAudioSinkManager> gAudioSinkManager;
         UT_ASSERT_EQUAL(status.exceptionCode(), Status::EX_NONE); \
     } while (0)
 
-#define AUDIOSINK_SETPROPERTY_FAILURE(audioSink, property, propertyValue, exception) \
+#define AUDIOSINK_SETPROPERTY_FAILURE(audioSinkController, property, propertyValue, exception) \
     do { \
         ::android::binder::Status status; \
         bool _aidl_return = false; \
         UT_LOG_INFO("Calling setProperty(IN:property[%s], IN:propertyValue[0x%X], OUT:_aidl_return[])", com::rdk::hal::audiosink::toString(property).c_str(), propertyValue.value); \
-        status = (audioSink)->setProperty(property, propertyValue, &_aidl_return); \
+        status = (audioSinkController)->setProperty(property, propertyValue, &_aidl_return); \
         UT_LOG_INFO("Result setProperty(IN:property[%s], IN:propertyValue[0x%X]), status:[isOK:%s, exception:%s]", com::rdk::hal::audiosink::toString(property).c_str(), propertyValue.value, \
             UT_Control_GetMapString(bool_mapTable, status.isOk()), \
             UT_Control_GetMapString(statusException_mapTable, status.exceptionCode())); \
@@ -765,23 +765,23 @@ extern sp<IAudioSinkManager> gAudioSinkManager;
         UT_ASSERT_EQUAL(status.exceptionCode(), exception); \
     }while (0)
 
-#define AUDIOSINK_SETPROPERTY_LIST_SUCCESS(audioSink, properyList, type) \
+#define AUDIOSINK_SETPROPERTY_LIST_SUCCESS(audioSinkController, properyList, type) \
     do { \
         for (const auto& [property, value] : properyList) \
         { \
             PropertyValue propertyValue; \
             propertyValue.value = PropertyValue::Value::make<PropertyValue::Value::Tag::type>(value); \
-            AUDIOSINK_SETPROPERTY_SUCCESS(audioSink, property, propertyValue); \
+            AUDIOSINK_SETPROPERTY_SUCCESS(audioSinkController, property, propertyValue); \
         } \
     } while (0)
 
-#define AUDIOSINK_SETPROPERTY_LIST_FAILURE(audioSink, properyList, type, exception) \
+#define AUDIOSINK_SETPROPERTY_LIST_FAILURE(audioSinkController, properyList, type, exception) \
     do { \
         for (const auto& [property, value] : properyList) \
         { \
             PropertyValue propertyValue; \
             propertyValue.value = PropertyValue::Value::make<PropertyValue::Value::Tag::type>(value); \
-            AUDIOSINK_SETPROPERTY_FAILURE(audioSink, property, propertyValue, exception); \
+            AUDIOSINK_SETPROPERTY_FAILURE(audioSinkController, property, propertyValue, exception); \
         } \
     } while (0)
 
