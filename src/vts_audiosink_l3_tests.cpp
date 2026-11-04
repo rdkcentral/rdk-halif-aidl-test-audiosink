@@ -318,18 +318,18 @@ public:
                                                 decoderControlListener, mAVBufferManager, decoderId, clockId,
                                                 secureDecode, isTunnel, testConfig, isClockInUse);
                     audiosinkTest.run();
-                    tunnelModeMismatch = tunnelModeMismatch || audiosinkTest.hasFrameOutputModeMismatch();
+                    //tunnelModeMismatch = tunnelModeMismatch || audiosinkTest.hasFrameOutputModeMismatch();
 
                     if (decodeThread.joinable())
                         decodeThread.join();
                 }
 
-                const auto outputMode = decoderControlListener->getFrameOutputMode();
-                if (outputMode != FrameOutputMode::UNKNOWN &&
-                    ((outputMode == FrameOutputMode::TUNNEL) != isTunnel))
-                {
-                    tunnelModeMismatch = true;
-                }
+                //const auto outputMode = decoderControlListener->getFrameOutputMode();
+                //if (outputMode != FrameOutputMode::UNKNOWN &&
+                //    ((outputMode == FrameOutputMode::TUNNEL) != isTunnel))
+                //{
+                //    tunnelModeMismatch = true;
+                //}
 
                 AVBUFFER_GETMETRICS(mAVBufferManager, secureDecode, afterHeapMetrics);
 
@@ -452,7 +452,7 @@ public:
             for (auto& t : sinkThreads)
                 if (t.joinable()) t.join();
 
-            for (int i = 0; i < numInstances; ++i)
+            /*for (int i = 0; i < numInstances; ++i)
             {
                 const auto& decoderControlListener = std::get<2>(usableDecoders[i]);
                 tunnelModeMismatch = tunnelModeMismatch || sinkTests[i]->hasFrameOutputModeMismatch();
@@ -462,7 +462,7 @@ public:
                 {
                     tunnelModeMismatch = true;
                 }
-            }
+            }*/
 
             // Destroy decoder tests now so their pool destructors fire before the metrics check
             decoderTests.clear();

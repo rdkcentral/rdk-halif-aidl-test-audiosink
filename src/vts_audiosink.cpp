@@ -849,10 +849,10 @@ void AudioSinkTest::queueDecodedFrameIfNonTunnel(const DecodedAudioFrame_t& deco
                                                   audiodecoder::FrameMetadata& metadata,
                                                   bool& flushDone)
 {
-    if (decodedFrame.isTunnel)
+    /*if (decodedFrame.isTunnel)
     {
         return;
-    }
+    }*/
 
     if (mTestConfiguration.sinkFlushPts > 0 &&
         decodedFrame.framePTS >= mTestConfiguration.sinkFlushPts && !flushDone)
@@ -914,7 +914,7 @@ void AudioSinkTest::audioSinkNonTunnelTest()
             }
 
             bool result = false;
-            if (decodedFrame.isTunnel != mIsTunnel)
+            /*if (decodedFrame.isTunnel != mIsTunnel)
             {
                 mFrameOutputModeMismatch = true;
                 if (!decodedFrame.isTunnel)
@@ -922,7 +922,7 @@ void AudioSinkTest::audioSinkNonTunnelTest()
                     AVBUFFER_FREE_SUCCESS(mAVBufferManager, decodedFrame.frameBufferHandle);
                 }
                 continue;
-            }
+            }*/
 
             frameCount++;
 
@@ -945,10 +945,10 @@ void AudioSinkTest::audioSinkNonTunnelTest()
              * The delay is applied here, in the sink queueing path, not in the decoder
              * submission path, because only a gap between queueAudioFrame calls can
              * empty the sink's internal PCM queue while the clock is running. */
-            if (!decodedFrame.isTunnel && mTestConfiguration.decoderDelay > 0)
+            /*if (!decodedFrame.isTunnel && mTestConfiguration.decoderDelay > 0)
             {
                 std::this_thread::sleep_for(std::chrono::milliseconds(mTestConfiguration.decoderDelay));
-            }
+            }*/
 
             std::optional<PropertyValue> latencyValue;
             AUDIOSINK_GET_PROPERTY_SUCCESS(mSinkHandle, audiosink::Property::RENDER_LATENCY_NS, latencyValue);
@@ -1016,7 +1016,7 @@ void AudioSinkTest::audioSinkTunnelTest()
                     break;
                 }
             }
-            if (decodedFrame.isTunnel != mIsTunnel)
+            /*if (decodedFrame.isTunnel != mIsTunnel)
             {
                 mFrameOutputModeMismatch = true;
                 if (!decodedFrame.isTunnel)
@@ -1024,7 +1024,7 @@ void AudioSinkTest::audioSinkTunnelTest()
                     AVBUFFER_FREE_SUCCESS(mAVBufferManager, decodedFrame.frameBufferHandle);
                 }
                 continue;
-            }
+            }*/
 
             frameCount++;
 

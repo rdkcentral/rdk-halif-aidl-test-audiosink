@@ -73,6 +73,7 @@
 #include <inttypes.h>
 
 #include "vts_audiodecoder.h"
+#include "vts_audiodecoder_test.h"
 #include "vts_avbuffer.h"
 #include "vts_avclock.h"
 
