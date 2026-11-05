@@ -163,16 +163,16 @@ extern sp<IAudioSinkManager> gAudioSinkManager;
         UT_ASSERT_EQUAL(status.exceptionCode(), exception); \
     } while (0)
 
-#define AUDIODSINK_GETCAPABILITIES(audioSink, capabilities) \
+#define AUDIOSINK_GETCAPABILITIES(audioSink, capabilities) \
     do { \
         ::android::binder::Status status; \
         UT_LOG_INFO("Calling getCapabilities(OUT:capabilities)"); \
-        status = (audioSink)->getCapabilities(&capabilities); \
+        status = (audioSink)->getCapabilities(capabilities); \
         UT_LOG_INFO("Result getCapabilities(OUT:capabilities), status:[isOK:%s, exception:%s]", \
                                 UT_Control_GetMapString(bool_mapTable, status.isOk()), \
                                 UT_Control_GetMapString(statusException_mapTable, status.exceptionCode())); \
         UT_ASSERT_TRUE(status.isOk()); \
-        UT_ASSERT_NOT_EQUAL(&capabilities, nullptr); \
+        UT_ASSERT_NOT_EQUAL(capabilities, nullptr); \
         UT_ASSERT_EQUAL(status.exceptionCode(), Status::EX_NONE); \
     } while (0)
 
@@ -793,8 +793,8 @@ public:
        : BnAudioSinkControllerListener(),
          mUnderFlowCount(0),
          mFlushCompleteCount(0),
-         mFrameBufferAvailableCount(0),
-         mSinkID(sinkID)
+         mSinkID(sinkID),
+         mFrameBufferAvailableCount(0)
     {
     }
     virtual ~AudioSinkControllerListener() = default;

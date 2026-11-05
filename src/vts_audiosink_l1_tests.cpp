@@ -393,7 +393,7 @@ UT_ADD_TEST(VTS_L1_AudioSink, getCapabilities_pos)
         AUDIOSINK_MANAGER_GETAUDIOSINK(_sinkId, audioSink);
 
         /* Get Capabilities of Audio sink */
-        AUDIODSINK_GETCAPABILITIES(audioSink, capabilities);
+        AUDIOSINK_GETCAPABILITIES(audioSink, &capabilities);
 
         /* Validate sink capabilities */
         vts_audiosink_helper_validateSinkCapabilities(_sinkId.value, capabilities);
@@ -717,7 +717,7 @@ UT_ADD_TEST(VTS_L1_AudioSink, open_pos)
 
         /* Get Capabilities of Audio sink to determine which ContentTypes are supported */
         audiosink::Capabilities capabilities;
-        AUDIODSINK_GETCAPABILITIES(audioSink, capabilities);
+        AUDIOSINK_GETCAPABILITIES(audioSink, &capabilities);
 
         // Test opening with each ContentType supported by this sink's capabilities
         for (const auto& contentType : capabilities.supportedContentTypes)
