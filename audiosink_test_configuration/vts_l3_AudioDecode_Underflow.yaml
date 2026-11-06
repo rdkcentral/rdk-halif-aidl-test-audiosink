@@ -27,7 +27,7 @@ audiodecoder:
   L3: #Test Level
     Decode_Underflow: #Test Name
       Controls:
-        delay_between_decode_calls: 200 # Insert delay in msec between each `decodeBuffer()` call
+        delay_between_decode_calls: 500 # Insert delay in msec between each `decodeBuffer()` call
         stop_start_pts: -1 #`pts` value in nano seconds at which the decoder should be stopped and restarted during the test. -1 indicates that decoder should not be restarted
         signal_discontinuity_pts: -1 #`pts` value in nano seconds at which the test should signal discontinuity to the decoder. -1 indicates that no discontinuity signal should be sent
         flush_pts: -1 #`pts` value in nano seconds that determine when the test should flush the decoder. -1 indicates that test should not flush
