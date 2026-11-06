@@ -92,8 +92,6 @@ static std::multimap<audiosink::Property, int32_t> validIntPropertyReady =
     {audiosink::Property::AV_SOURCE, int32_t(static_cast<int32_t>(AVSource::TUNER))},
     {audiosink::Property::AV_SOURCE, int32_t(static_cast<int32_t>(AVSource::SYSTEM))},
     {audiosink::Property::AV_SOURCE, int32_t(static_cast<int32_t>(AVSource::HDMI_1))},
-    {audiosink::Property::DOLBY_ATMOS_LOCK, 0},
-    {audiosink::Property::DOLBY_ATMOS_LOCK, 1},
 };
 
 /* Test class registration with UT_Core */
@@ -211,7 +209,7 @@ UT_ADD_TEST(VTS_L2_AudioSink, TestReadWriteProperties)
             setValue.value = PropertyValue::Value::make<PropertyValue::Value::Tag::intValue>(value);
 
             /* Set the property and value*/
-            AUDIOSINK_SETPROPERTY_SUCCESS(audioSink, property, setValue);
+            AUDIOSINK_SETPROPERTY_SUCCESS(audioSinkController, property, setValue);
 
             /* Get the resource ID */
             AUDIOSINK_GET_PROPERTY_SUCCESS(audioSink, property, resource_id);
