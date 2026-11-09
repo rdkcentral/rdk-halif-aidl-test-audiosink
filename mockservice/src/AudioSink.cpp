@@ -42,7 +42,6 @@ namespace com {
 
                 /* Read Write Properties */
                 AVSource g_av_source[NUM_AUDIO_SINK];
-                int32_t g_dolby_atmos_lock[NUM_AUDIO_SINK];
                 int32_t g_mixer_id[NUM_AUDIO_SINK];
                 int32_t g_reference_level[NUM_AUDIO_SINK];
                 Volume g_volume[NUM_AUDIO_SINK];
@@ -60,7 +59,6 @@ namespace com {
                         g_reference_level[i] = -31;
                         g_av_source[i] = AVSource::UNKNOWN;
                         g_mixer_id[i] = 0;
-                        g_dolby_atmos_lock[i] = 0;
                         g_volume[i].volume = 1.0;
                         g_volume[i].muted = false;
                         g_audiodecoder_id[i].value = audiodecoder::IAudioDecoder::Id::UNDEFINED;
@@ -125,8 +123,8 @@ namespace com {
                     }
 
                     _aidl_return->supportsLowLatency = false;
-                    _aidl_return->systemMixerSampleRateHz = 48000;
-                    _aidl_return->systemMixerPCMFormat = com::rdk::hal::audiodecoder::PCMFormat::S32BE;
+                    _aidl_return->supportedSampleRatesHz = {48000};
+                    _aidl_return->supportedPCMFormats = {com::rdk::hal::audiodecoder::PCMFormat::S16LE};
                     _aidl_return->supportsPlanarFormat = false;
                     _aidl_return->supportsSoCProprietary = false;
                     _aidl_return->maxNumChannels = 2;
@@ -228,9 +226,6 @@ namespace com {
                         case audiosink::Property::MIXER_ID:
                         value.value = com::rdk::hal::PropertyValue::Value::make<com::rdk::hal::PropertyValue::Value::intValue>(g_mixer_id[this->id.value]);
                         break;
-                        case audiosink::Property::DOLBY_ATMOS_LOCK:
-                        value.value = com::rdk::hal::PropertyValue::Value::make<com::rdk::hal::PropertyValue::Value::intValue>(g_dolby_atmos_lock[this->id.value]);
-                        break;
                         //TBD
                         case audiosink::Property::METRIC_xxxx:
                         value.value = com::rdk::hal::PropertyValue::Value::make<com::rdk::hal::PropertyValue::Value::intValue>(/* metric value */ 100);
@@ -239,84 +234,6 @@ namespace com {
                         return android::binder::Status::fromExceptionCode(android::binder::Status::EX_ILLEGAL_ARGUMENT);
                     }
                     *_aidl_return = value;
-                    return android::binder::Status::ok();
-                }
-
-                android::binder::Status AudioSink::setProperty( audiosink::Property property, const PropertyValue& propertyValue, bool* _aidl_return )
-                {
-                    int32_t intvalue;
-                    *_aidl_return = true;
-                    switch (property)
-                    {
-                        case audiosink::Property::RESOURCE_ID:
-                        case audiosink::Property::RENDER_LATENCY_NS:
-                        case audiosink::Property::QUEUE_DEPTH_NS:
-                            *_aidl_return = false;
-                            return android::binder::Status::fromExceptionCode(android::binder::Status::EX_UNSUPPORTED_OPERATION);
-                        case audiosink::Property::REFERENCE_LEVEL:
-                            if(g_audiosink_state[this->id.value] != State::READY)
-                            {
-                                *_aidl_return = false;
-                                return android::binder::Status::fromExceptionCode(android::binder::Status::EX_ILLEGAL_STATE);
-                            }
-                            intvalue  = propertyValue.value->get<PropertyValue::Value::Tag::intValue>();
-
-                            //TBD
-                            if(intvalue < -31 || intvalue > 31)
-                            {
-                                *_aidl_return = false;
-                                return android::binder::Status::fromExceptionCode(android::binder::Status::EX_ILLEGAL_ARGUMENT);
-                            }
-                            g_reference_level[this->id.value] = intvalue;
-                            break;
-                        case audiosink::Property::AV_SOURCE:
-                            if(g_audiosink_state[this->id.value] != State::READY)
-                            {
-                                *_aidl_return = false;
-                                return android::binder::Status::fromExceptionCode(android::binder::Status::EX_ILLEGAL_STATE);
-                            }
-                            intvalue = propertyValue.value->get<PropertyValue::Value::Tag::intValue>();
-                            if (intvalue < static_cast<int32_t>(AVSource::AUTO) || intvalue > static_cast<int32_t>(AVSource::COMPOSITE_5))
-                            {
-                                *_aidl_return = false;
-                                return android::binder::Status::fromExceptionCode(android::binder::Status::EX_ILLEGAL_ARGUMENT);
-                            }
-                            g_av_source[this->id.value] = static_cast<AVSource>(intvalue);
-                            break;
-                        case audiosink::Property::MIXER_ID:
-                            if(g_audiosink_state[this->id.value] != State::READY)
-                            {
-                                *_aidl_return = false;
-                                return android::binder::Status::fromExceptionCode(android::binder::Status::EX_ILLEGAL_STATE);
-                            }
-                            intvalue = propertyValue.value->get<PropertyValue::Value::Tag::intValue>();
-
-                            if(intvalue < -1)
-                            {
-                                *_aidl_return = false;
-                                return android::binder::Status::fromExceptionCode(android::binder::Status::EX_ILLEGAL_ARGUMENT);
-                            }
-                            g_mixer_id[this->id.value] = intvalue;
-                            break;
-                        case audiosink::Property::DOLBY_ATMOS_LOCK:
-                            if(g_audiosink_state[this->id.value] != State::READY)
-                            {
-                                *_aidl_return = false;
-                                return android::binder::Status::fromExceptionCode(android::binder::Status::EX_ILLEGAL_STATE);
-                            }
-                            intvalue = propertyValue.value->get<PropertyValue::Value::Tag::intValue>();
-
-                            if(intvalue < 0 || intvalue > 1)
-                            {
-                                *_aidl_return = false;
-                                return android::binder::Status::fromExceptionCode(android::binder::Status::EX_ILLEGAL_ARGUMENT);
-                            }
-                            g_dolby_atmos_lock[this->id.value] = intvalue;
-                            break;
-                        default:
-                            *_aidl_return = false;
-                            return android::binder::Status::fromExceptionCode(android::binder::Status::EX_ILLEGAL_ARGUMENT);
-                    }
                     return android::binder::Status::ok();
                 }
 
@@ -534,6 +451,69 @@ namespace com {
                     g_audiodecoder_id[this->id.value] = audioDecoderId;
                     g_audiodecoder_selected[this->id.value] = true;
                     *_aidl_return = true;
+                    return android::binder::Status::ok();
+                }
+
+                android::binder::Status AudioSinkController::setProperty( audiosink::Property property, const PropertyValue& propertyValue, bool* _aidl_return )
+                {
+                    int32_t intvalue;
+                    *_aidl_return = true;
+                    switch (property)
+                    {
+                        case audiosink::Property::RESOURCE_ID:
+                        case audiosink::Property::RENDER_LATENCY_NS:
+                        case audiosink::Property::QUEUE_DEPTH_NS:
+                            *_aidl_return = false;
+                            return android::binder::Status::fromExceptionCode(android::binder::Status::EX_UNSUPPORTED_OPERATION);
+                        case audiosink::Property::REFERENCE_LEVEL:
+                            if(g_audiosink_state[this->id.value] != State::READY)
+                            {
+                                *_aidl_return = false;
+                                return android::binder::Status::fromExceptionCode(android::binder::Status::EX_ILLEGAL_STATE);
+                            }
+                            intvalue  = propertyValue.value->get<PropertyValue::Value::Tag::intValue>();
+
+                            //TBD
+                            if(intvalue < -31 || intvalue > 31)
+                            {
+                                *_aidl_return = false;
+                                return android::binder::Status::fromExceptionCode(android::binder::Status::EX_ILLEGAL_ARGUMENT);
+                            }
+                            g_reference_level[this->id.value] = intvalue;
+                            break;
+                        case audiosink::Property::AV_SOURCE:
+                            if(g_audiosink_state[this->id.value] != State::READY)
+                            {
+                                *_aidl_return = false;
+                                return android::binder::Status::fromExceptionCode(android::binder::Status::EX_ILLEGAL_STATE);
+                            }
+                            intvalue = propertyValue.value->get<PropertyValue::Value::Tag::intValue>();
+                            if (intvalue < static_cast<int32_t>(AVSource::AUTO) || intvalue > static_cast<int32_t>(AVSource::COMPOSITE_5))
+                            {
+                                *_aidl_return = false;
+                                return android::binder::Status::fromExceptionCode(android::binder::Status::EX_ILLEGAL_ARGUMENT);
+                            }
+                            g_av_source[this->id.value] = static_cast<AVSource>(intvalue);
+                            break;
+                        case audiosink::Property::MIXER_ID:
+                            if(g_audiosink_state[this->id.value] != State::READY)
+                            {
+                                *_aidl_return = false;
+                                return android::binder::Status::fromExceptionCode(android::binder::Status::EX_ILLEGAL_STATE);
+                            }
+                            intvalue = propertyValue.value->get<PropertyValue::Value::Tag::intValue>();
+
+                            if(intvalue < -1)
+                            {
+                                *_aidl_return = false;
+                                return android::binder::Status::fromExceptionCode(android::binder::Status::EX_ILLEGAL_ARGUMENT);
+                            }
+                            g_mixer_id[this->id.value] = intvalue;
+                            break;
+                        default:
+                            *_aidl_return = false;
+                            return android::binder::Status::fromExceptionCode(android::binder::Status::EX_ILLEGAL_ARGUMENT);
+                    }
                     return android::binder::Status::ok();
                 }
 

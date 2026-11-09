@@ -110,7 +110,9 @@ public:
                   sp<IAVBuffer> AVBufferManager,
                   IAudioDecoder::Id decoderId,
                   IAVClock::Id clockId,
-                  bool secureDecode, const testConfiguration_t& config, bool isClockInUse)
+                  bool secureDecode, const testConfiguration_t& config,
+                  bool isClockInUse,
+                  bool isMixerConnected)
     {
         mSinkId = sinkId;
         mDecoderId = decoderId;
@@ -125,10 +127,10 @@ public:
         mClockId = clockId;
         mClockInUse = isClockInUse;
         mClockCtrlListener = new AudioSinkAVClockControllerListener();
+        mIsMixerConnected = isMixerConnected;
     }
 
     void run();
-    bool hasFrameOutputModeMismatch() const { return mFrameOutputModeMismatch; }
 
 private:
     IAudioSink::Id mSinkId;
@@ -143,12 +145,12 @@ private:
     bool mIsTunnel;
     sp<IAudioDecoder> mDecoderHandle;
     bool mClockInUse;
-    bool mFrameOutputModeMismatch = false;
     testConfiguration_t mTestConfiguration;
     sp<IAudioSinkController> mAudioSinkController;
     sp<IAVClock> mClock;
     sp<IAVClockController> mClockController;
     sp<AudioSinkAVClockControllerListener> mClockCtrlListener;
+    bool mIsMixerConnected;
 
     void audioSinkNonTunnelTest();
     void audioSinkTunnelTest();
@@ -157,6 +159,7 @@ private:
     void tearDownClock();
     void setupAudioSink();
     void tearDownAudioSink();
+    void cleanupAudioDecoder();
     void validateCallbacks(int64_t expectedFirstFramePTS, bool expectUnderflow, bool expectResume);
     void copyMetaData(const audiodecoder::FrameMetadata& source, audiodecoder::FrameMetadata& destination);
     void queueDecodedFrameIfNonTunnel(const DecodedAudioFrame_t& decodedFrame,

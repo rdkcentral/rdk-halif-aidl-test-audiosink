@@ -291,6 +291,7 @@ public:
                 const IAudioSink::Id& _sinkId = std::get<0>(sinkTuple);
                 HeapMetrics beforeHeapMetrics, afterHeapMetrics;
                 bool isSinkAttached = true;
+                bool isMixerConnected = false;
 
                 if (!isSinkUsable(_sinkId, std::get<4>(sinkTuple).get(), secureDecode))
                 {
@@ -311,7 +312,7 @@ public:
                     AudioSinkTest audiosinkTest(_sinkId, std::get<1>(sinkTuple), decoderHandle,
                                                 std::get<2>(sinkTuple), std::get<3>(sinkTuple),
                                                 decoderControlListener, mAVBufferManager, decoderId, clockId,
-                                                secureDecode, testConfig, isClockInUse);
+                                                secureDecode, testConfig, isClockInUse, isMixerConnected);
                     audiosinkTest.run();
 
                     isTestExecuted = true;
@@ -357,6 +358,7 @@ public:
             std::vector<std::unique_ptr<AudioDecoderTest>> decoderTests;
             std::vector<std::unique_ptr<AudioSinkTest>> sinkTests;
             bool isSinkAttached = true;
+            bool isMixerConnected = false;
 
             // Get heap metrics
             AVBUFFER_GETMETRICS(mAVBufferManager, secureDecode, beforeHeapMetrics);
@@ -416,7 +418,7 @@ public:
                                                                 decoderControlListener,
                                                                 mAVBufferManager, _decoderId, clockId,
                                                                 secureDecode,
-                                                                testConfig, isClockInUse);
+                                                                testConfig, isClockInUse, isMixerConnected);
                 sinkThreads.emplace_back(&AudioSinkTest::run, sinkTest.get());
                 sinkTests.push_back(std::move(sinkTest));
             }

@@ -144,6 +144,7 @@ bool AudioSinkControllerListener::getNextFirstFrameRenderedPTS(int64_t &firstFra
 {
     std::unique_lock<std::mutex> lock(mFFMutex);
 
+    firstFramePTS = -1;
     // Wait until queue is not empty or timeout occurs
     bool gotEvent = mFFRenderAvailable.wait_for(
         lock,

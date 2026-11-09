@@ -174,6 +174,28 @@ void AudioSinkTest::tearDownAudioSink()
     }
 }
 
+void AudioSinkTest::cleanupAudioDecoder()
+{
+    DecodedAudioFrame_t decodedFrame;
+    while (mdecoderControlListener->getNextFrame(decodedFrame, 2000, true))
+    {
+        if(decodedFrame.frameBufferHandle != -1)
+        {
+            bool isBufferValid;
+
+            UT_LOG_ERROR("[SinkID: %d] Frames received after the audio sink has been stopped", mSinkId.value);
+            UT_ASSERT_TRUE(false);
+
+            AVBUFFER_ISVALID_SUCCESS(mAVBufferManager, decodedFrame.frameBufferHandle, isBufferValid);
+
+            if (isBufferValid)
+            {
+                AVBUFFER_FREE_SUCCESS(mAVBufferManager, decodedFrame.frameBufferHandle);
+            }
+        }
+    }
+}
+
 void AudioSinkTest::validateCallbacks(int64_t expectedFirstFramePTS, bool expectUnderflow, bool expectResume)
 {
     /* Validate onPrimed from the AV clock in AUDIO_MASTER mode */
@@ -213,10 +235,32 @@ void AudioSinkTest::validateCallbacks(int64_t expectedFirstFramePTS, bool expect
     }
 
     /* Validate the callback */
-    /* Control listener */
     int64_t firstFrameRenderedPTS = -1;
-    UT_ASSERT_TRUE(mControlListener->getNextFirstFrameRenderedPTS(firstFrameRenderedPTS));
-    UT_ASSERT_EQUAL(expectedFirstFramePTS, firstFrameRenderedPTS);
+    int64_t firstFrameRenderedPTSEvent = -1;
+    bool isfirstFrameRendered = false;
+    bool isfirstFrameRenderedEvent = false;
+    bool expectedFirstFrameRendered = false;
+
+    isfirstFrameRendered = mControlListener->getNextFirstFrameRenderedPTS(firstFrameRenderedPTS);
+    isfirstFrameRenderedEvent = mEventListener->getNextFirstFrameRenderedPTS(firstFrameRenderedPTSEvent);
+
+    /* if mixer not connected, we do not expect the first frame rendered callback */
+    if(mIsMixerConnected)
+    {
+        expectedFirstFrameRendered = true;
+    }
+    else
+    {
+        expectedFirstFrameRendered = false;
+        expectedFirstFramePTS = -1;
+    }
+
+    UT_ASSERT_EQUAL(isfirstFrameRendered, expectedFirstFrameRendered);
+    UT_ASSERT_EQUAL(firstFrameRenderedPTS, expectedFirstFramePTS);
+
+    UT_ASSERT_EQUAL(isfirstFrameRenderedEvent, expectedFirstFrameRendered);
+    UT_ASSERT_EQUAL(firstFrameRenderedPTSEvent, expectedFirstFramePTS);
+
 
     if (expectUnderflow)
     {
@@ -224,16 +268,8 @@ void AudioSinkTest::validateCallbacks(int64_t expectedFirstFramePTS, bool expect
         UT_ASSERT_TRUE(mControlListener->getUnderFlowCount(true) > 0);
         UT_ASSERT_TRUE(mControlListener->getNextAudioResumedPTS(resumedPTS));
         UT_ASSERT_TRUE(resumedPTS >= 0);
-    }
 
-    /* Event listener */
-    firstFrameRenderedPTS = -1;
-    UT_ASSERT_TRUE(mEventListener->getNextFirstFrameRenderedPTS(firstFrameRenderedPTS));
-    UT_ASSERT_EQUAL(expectedFirstFramePTS, firstFrameRenderedPTS);
-
-    if (expectUnderflow)
-    {
-        int64_t resumedPTS = -1;
+        resumedPTS = -1;
         UT_ASSERT_TRUE(mEventListener->getUnderFlowCount(true) > 0);
         UT_ASSERT_TRUE(mEventListener->getNextAudioResumedPTS(resumedPTS));
         UT_ASSERT_TRUE(resumedPTS >= 0);
@@ -397,17 +433,16 @@ void AudioSinkTest::run()
         /* Signal EOS to the sink after the decoder has completed and all frames were queued. */
         AUDIOSINK_SIGNAL_ENDOFSTREAM_SUCCESS(mAudioSinkController);
 
-        /* Validate callbacks only for the requested decoder output mode. */
-        if (!mFrameOutputModeMismatch)
-        {
-            validateCallbacks(firstFramePTS, mTestConfiguration.decoderDelay > 0, mTestConfiguration.decoderDelay > 0);
-        }
+        validateCallbacks(firstFramePTS, mTestConfiguration.decoderDelay > 0, mTestConfiguration.decoderDelay > 0);
 
         /* Validate the metrics */
         validateMetric();
 
         /* Stop the Audio sink */
         tearDownAudioSink();
+
+        /* cleanup if any buffers received from the decoder after closing sink */
+        cleanupAudioDecoder();
     }
     catch (const std::exception& ex)
     {
