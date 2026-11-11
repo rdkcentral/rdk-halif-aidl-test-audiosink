@@ -96,17 +96,8 @@ using android::binder::Status;
 using namespace com::rdk::hal;
 using namespace com::rdk::hal::audiosink;
 
-/*void AudioSinkTest::run()
-{
-    if(mIsTunnel)
-    {
-        audioSinkTunnelTest();
-    }
-    else
-    {
-        audioSinkNonTunnelTest();
-    }
-}*/
+#define MAX_FRAME_WAIT_TIME 500  /* ms — timeout for decoded frame output (must survive flush gaps) */
+#define MAX_RETRY_COUNT 5        /* Maximum number of retries for waiting frames */
 
 void AudioSinkTest::setupClock()
 {
@@ -261,7 +252,6 @@ void AudioSinkTest::validateCallbacks(int64_t expectedFirstFramePTS, bool expect
     UT_ASSERT_EQUAL(isfirstFrameRenderedEvent, expectedFirstFrameRendered);
     UT_ASSERT_EQUAL(firstFrameRenderedPTSEvent, expectedFirstFramePTS);
 
-
     if (expectUnderflow)
     {
         int64_t resumedPTS = -1;
@@ -399,6 +389,7 @@ void AudioSinkTest::run()
         int32_t frameCount = 0;
         int64_t firstFramePTS = -1;
         bool flushDone = false;
+        int32_t retryCount = 0;
         avSourcePropertyValue.value = PropertyValue::Value::make<PropertyValue::Value::Tag::intValue>(int32_t(static_cast<int32_t>(AVSource::IP)));
         OperationalMode operationalMode = OperationalMode::NON_TUNNELLED;
 
@@ -406,8 +397,37 @@ void AudioSinkTest::run()
 
         setupAudioSink();
 
-        while (mdecoderControlListener->getNextFrame(decodedFrame, 500, true))
+        while (true)
         {
+            if(!mdecoderControlListener->getNextFrame(decodedFrame, MAX_FRAME_WAIT_TIME, true))
+            {
+                /* If frame not received within the wait time, check if EOS has been reached */
+                if (mdecoderControlListener->waitForEndOfStream(MAX_FRAME_WAIT_TIME))
+                {
+                    /* EOS has been reached, no more frames expected */
+                    break;
+                }
+
+                /* EOS has not been reached, continue waiting for frames */
+                retryCount++;
+                UT_LOG_ERROR("[Audio DecoderID: %d, SinkID: %d] decoded frame not received within %d ms",
+                                     mDecoderId.value, mSinkId.value, MAX_FRAME_WAIT_TIME);
+                UT_ASSERT_TRUE(false);
+
+                if(retryCount < MAX_RETRY_COUNT)
+                {
+                    continue;
+                }
+                else
+                {
+                    UT_LOG_ERROR("[Audio DecoderID: %d, SinkID: %d] Max retry count reached, exiting", mDecoderId.value, mSinkId.value);
+                    break;
+                }
+            }
+
+            /* Reset retry count for the next frame */
+            retryCount = 0;
+
             frameCount++;
 
             if (frameCount == 1)
