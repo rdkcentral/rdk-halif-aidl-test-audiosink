@@ -1,0 +1,154 @@
+#** *****************************************************************************
+# *
+# * If not stated otherwise in this file or this component's LICENSE file the
+# * following copyright and licenses apply:
+# *
+# * Copyright 2025 RDK Management
+# *
+# * Licensed under the Apache License, Version 2.0 (the "License");
+# * you may not use this file except in compliance with the License.
+# * You may obtain a copy of the License at
+# *
+# *
+# * http://www.apache.org/licenses/LICENSE-2.0
+# *
+# * Unless required by applicable law or agreed to in writing, software
+# * distributed under the License is distributed on an "AS IS" BASIS,
+# * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# * See the License for the specific language governing permissions and
+# * limitations under the License.
+# *
+#** ******************************************************************************
+
+audiosink:
+  stream_download_path: "http://<>/streams" #`URL` path to download the audio test streams
+  input_streams_path: "assets/streams/input" #Target path where input streams are stored
+  reference_streams_path: "assets/streams/reference/" #Target path for reference PCM streams
+  L3: #Test Level
+    Sink_BackPressure: #Test Name
+      Controls:
+        delay_between_decode_calls: 500 # Insert delay in msec between each `decodeBuffer()` call
+        stop_start_pts: -1 #`pts` value in nano seconds at which the decoder should be stopped and restarted during the test. -1 indicates that decoder should not be restarted
+        signal_discontinuity_pts: -1 #`pts` value in nano seconds at which the test should signal discontinuity to the decoder. -1 indicates that no discontinuity signal should be sent
+        flush_pts: -1 #`pts` value in nano seconds that determine when the test should flush the decoder. -1 indicates that test should not flush
+        flush_reset_pts: -1 #`pts` value in nano seconds that determine when the test should flush with reset the decoder. -1 indicates that test should not flush
+        eos_pts: -1 #`pts` value in nano seconds that determine when the test should sent `eos` signal to decoder. -1 indicates that test should not signal `eos`
+        sink_eos_pts: -1
+        sink_flush_pts: -1
+        sink_backpressure: true
+      Inputs:
+        Streams:
+          - Name: tones_48k_2_256_long_aac
+            PTS:
+              - 0
+              - 2133333
+              - 4266666
+              - 6400000
+              - 8533333
+              - 10666666
+              - 12800000
+              - 14933333
+              - 17066666
+              - 19200000
+              - 21333333
+              - 23466666
+              - 25600000
+              - 27733333
+              - 29866666
+              - 32000000
+              - 34133333
+              - 36266666
+              - 38400000
+              - 40533333
+              - 42666666
+              - 44800000
+              - 46933333
+              - 49066666
+              - 51200000
+              - 53333333
+              - 55466666
+              - 57600000
+              - 59733333
+              - 61866666
+              - 64000000
+              - 66133333
+              - 68266666
+              - 70400000
+              - 72533333
+              - 74666666
+              - 76800000
+              - 78933333
+              - 81066666
+              - 83200000
+              - 85333333
+              - 87466666
+              - 89600000
+              - 91733333
+              - 93866666
+              - 96000000
+              - 98133333
+              - 100266666
+              - 102400000
+              - 104533333
+            trim:
+              - 0
+              - 0
+            decode_time_threshold: 100000
+            rms_diff_threshold: 0.5
+          - Name: tones_48k_2_192_long_ac3
+            PTS:
+              - 0
+              - 2133333
+              - 4266666
+              - 6400000
+              - 8533333
+              - 10666666
+              - 12800000
+              - 14933333
+              - 17066666
+              - 19200000
+              - 21333333
+              - 23466666
+              - 25600000
+              - 27733333
+              - 29866666
+              - 32000000
+              - 34133333
+              - 36266666
+              - 38400000
+              - 40533333
+              - 42666666
+              - 44800000
+              - 46933333
+              - 49066666
+              - 51200000
+              - 53333333
+              - 55466666
+              - 57600000
+              - 59733333
+              - 61866666
+              - 64000000
+              - 66133333
+              - 68266666
+              - 70400000
+              - 72533333
+              - 74666666
+              - 76800000
+              - 78933333
+              - 81066666
+              - 83200000
+              - 85333333
+              - 87466666
+              - 89600000
+              - 91733333
+              - 93866666
+              - 96000000
+              - 98133333
+              - 100266666
+              - 102400000
+              - 104533333
+            trim:
+              - 0
+              - 0
+            rms_diff_threshold: 0.5
+            decode_time_threshold: 100000

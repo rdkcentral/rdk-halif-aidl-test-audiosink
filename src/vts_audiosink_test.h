@@ -166,6 +166,8 @@ private:
                                       OperationalMode operationalMode,
                                       audiodecoder::FrameMetadata& metadata,
                                       bool& flushDone);
+    bool validateSinkBackpressure(const DecodedAudioFrame_t& decodedFrame,
+                                  audiodecoder::FrameMetadata& metadata);
     void validateMetric();
 };
 

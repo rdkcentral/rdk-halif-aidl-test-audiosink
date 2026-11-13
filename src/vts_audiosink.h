@@ -816,6 +816,7 @@ public:
     int32_t getUnderFlowCount(bool reset);
     int32_t getFlushCompleteCount(bool reset);
     int32_t getFrameBufferAvailableCount(bool reset);
+    bool waitForFrameBufferAvailableEvent(std::chrono::milliseconds timeout);
 private:
     mutable mutex mStateMutex;
     mutable mutex mFFMutex;
@@ -828,6 +829,7 @@ private:
     condition_variable mFFRenderAvailable;
     condition_variable mEOSAvailable;
     condition_variable mResumeAvailable;
+    condition_variable mFrameBufferAvailableCV;
     ::com::rdk::hal::audiosink::State mCurrentState = ::com::rdk::hal::audiosink::State::CLOSED;
     vector<std::pair<::com::rdk::hal::audiosink::State, ::com::rdk::hal::audiosink::State>> mStateChanges;
     queue<int64_t> mFirstframerendered;

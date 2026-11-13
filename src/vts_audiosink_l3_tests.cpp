@@ -472,7 +472,7 @@ public:
         vector<testConfiguration_t> testConfiguration;
         bool isTestExecuted = false;
 
-        vts_audiodecoder_parse_testconfig(gAudioSinkTestConfiguration, gAudioModuleName, gTestGroup, testName, testConfiguration);
+        vts_audiodecoder_parse_testconfig(gAudioSinkTestConfiguration, gModuleName, gTestGroup, testName, testConfiguration);
 
         if(isConcurrentMode)
         {
@@ -541,7 +541,7 @@ public:
 */
 UT_ADD_TEST(VTS_L3_AudioSink, ASink_Sequential_NonSecure)
 {
-    const char *testName = "Decode";
+    const char *testName = "Sink_Basic";
     bool isSecureMode = false;
     bool isConcurrentMode = false;
 
@@ -561,7 +561,7 @@ UT_ADD_TEST(VTS_L3_AudioSink, ASink_Sequential_NonSecure)
 */
 UT_ADD_TEST(VTS_L3_AudioSink, ASink_Sequential_NonSecure_Flush)
 {
-    const char *testName = "Decode_Flush";
+    const char *testName = "Sink_Flush";
     bool isSecureMode = false;
     bool isConcurrentMode = false;
 
@@ -581,7 +581,7 @@ UT_ADD_TEST(VTS_L3_AudioSink, ASink_Sequential_NonSecure_Flush)
 */
 UT_ADD_TEST(VTS_L3_AudioSink, ASink_Sequential_NonSecure_EOS)
 {
-    const char *testName = "Decode_EOS";
+    const char *testName = "Sink_EOS";
     bool isSecureMode = false;
     bool isConcurrentMode = false;
 
@@ -601,17 +601,17 @@ UT_ADD_TEST(VTS_L3_AudioSink, ASink_Sequential_NonSecure_EOS)
 */
 UT_ADD_TEST(VTS_L3_AudioSink, ASink_Sequential_NonSecure_Underflow)
 {
-    const char *testName = "Decode_Underflow";
+    const char *testName = "Sink_Underflow";
     bool isSecureMode = false;
     bool isConcurrentMode = false;
 
     runSingleProcessTest(testName, isSecureMode, isConcurrentMode);
 }
-/*Tunnel and secure cases*/
+
 /**
-* @brief Test the audio sink functionality (sequential, secure)
+* @brief Test the audio sink backpressure scenario (sequential, non-secure)
 *
-* This test verifies the basic decode functionality in secure mode.
+* This test verifies the backpressure scenario.
 *
 * **Test Group ID:** 03@n
 * **Test Case ID:** 005@n
@@ -619,9 +619,30 @@ UT_ADD_TEST(VTS_L3_AudioSink, ASink_Sequential_NonSecure_Underflow)
 * **Test Procedure:**
 * Refer to UT specification documentation [audioSink_High-Level_TestSpecification.md](../../docs/pages/audioSink_High-Level_TestSpecification.md)
 */
+UT_ADD_TEST(VTS_L3_AudioSink, ASink_Sequential_NonSecure_Backpressure)
+{
+    const char *testName = "Sink_BackPressure";
+    bool isSecureMode = false;
+    bool isConcurrentMode = false;
+
+    runSingleProcessTest(testName, isSecureMode, isConcurrentMode);
+}
+
+/*Tunnel and secure cases*/
+/**
+* @brief Test the audio sink functionality (sequential, secure)
+*
+* This test verifies the basic decode functionality in secure mode.
+*
+* **Test Group ID:** 03@n
+* **Test Case ID:** 006@n
+*
+* **Test Procedure:**
+* Refer to UT specification documentation [audioSink_High-Level_TestSpecification.md](../../docs/pages/audioSink_High-Level_TestSpecification.md)
+*/
 UT_ADD_TEST(VTS_L3_AudioSink, ASink_Sequential_Secure)
 {
-    const char *testName = "Decode";
+    const char *testName = "Sink_Basic";
     bool isSecureMode = true;
     bool isConcurrentMode = false;
 
@@ -634,14 +655,14 @@ UT_ADD_TEST(VTS_L3_AudioSink, ASink_Sequential_Secure)
 * This test verifies the flush scenario in secure mode.
 *
 * **Test Group ID:** 03@n
-* **Test Case ID:** 006@n
+* **Test Case ID:** 007@n
 *
 * **Test Procedure:**
 * Refer to UT specification documentation [audioSink_High-Level_TestSpecification.md](../../docs/pages/audioSink_High-Level_TestSpecification.md)
 */
 UT_ADD_TEST(VTS_L3_AudioSink, ASink_Sequential_Secure_Flush)
 {
-    const char *testName = "Decode_Flush";
+    const char *testName = "Sink_Flush";
     bool isSecureMode = true;
     bool isConcurrentMode = false;
     runSingleProcessTest(testName, isSecureMode, isConcurrentMode);
@@ -653,14 +674,14 @@ UT_ADD_TEST(VTS_L3_AudioSink, ASink_Sequential_Secure_Flush)
 * This test verifies the EOS scenario in secure mode.
 *
 * **Test Group ID:** 03@n
-* **Test Case ID:** 007@n
+* **Test Case ID:** 008@n
 *
 * **Test Procedure:**
 * Refer to UT specification documentation [audioSink_High-Level_TestSpecification.md](../../docs/pages/audioSink_High-Level_TestSpecification.md)
 */
 UT_ADD_TEST(VTS_L3_AudioSink, ASink_Sequential_Secure_EOS)
 {
-    const char *testName = "Decode_EOS";
+    const char *testName = "Sink_EOS";
     bool isSecureMode = true;
     bool isConcurrentMode = false;
     runSingleProcessTest(testName, isSecureMode, isConcurrentMode);
@@ -672,14 +693,33 @@ UT_ADD_TEST(VTS_L3_AudioSink, ASink_Sequential_Secure_EOS)
 * This test verifies the underflow scenario in secure mode.
 *
 * **Test Group ID:** 03@n
-* **Test Case ID:** 008@n
+* **Test Case ID:** 009@n
 *
 * **Test Procedure:**
 * Refer to UT specification documentation [audioSink_High-Level_TestSpecification.md](../../docs/pages/audioSink_High-Level_TestSpecification.md)
 */
 UT_ADD_TEST(VTS_L3_AudioSink, ASink_Sequential_Secure_Underflow)
 {
-    const char *testName = "Decode_Underflow";
+    const char *testName = "Sink_Underflow";
+    bool isSecureMode = true;
+    bool isConcurrentMode = false;
+    runSingleProcessTest(testName, isSecureMode, isConcurrentMode);
+}
+
+/**
+* @brief Test the audio sink backpressure events (sequential, secure)
+*
+* This test verifies the backpressure scenario in secure mode.
+*
+* **Test Group ID:** 03@n
+* **Test Case ID:** 010@n
+*
+* **Test Procedure:**
+* Refer to UT specification documentation [audioSink_High-Level_TestSpecification.md](../../docs/pages/audioSink_High-Level_TestSpecification.md)
+*/
+UT_ADD_TEST(VTS_L3_AudioSink, ASink_Sequential_Secure_Backpressure)
+{
+    const char *testName = "Sink_Backpressure";
     bool isSecureMode = true;
     bool isConcurrentMode = false;
     runSingleProcessTest(testName, isSecureMode, isConcurrentMode);
@@ -691,14 +731,14 @@ UT_ADD_TEST(VTS_L3_AudioSink, ASink_Sequential_Secure_Underflow)
 * This test verifies concurrent decode functionality.
 *
 * **Test Group ID:** 03@n
-* **Test Case ID:** 017@n
+* **Test Case ID:** 011@n
 *
 * **Test Procedure:**
 * Refer to UT specification documentation [audioSink_High-Level_TestSpecification.md](../../docs/pages/audioSink_High-Level_TestSpecification.md)
 */
 UT_ADD_TEST(VTS_L3_AudioSink, ASink_Concurrent_NonSecure)
 {
-    const char *testName = "Decode";
+    const char *testName = "Sink_Basic";
     bool isSecureMode = false;
     bool isConcurrentMode = true;
     runSingleProcessTest(testName, isSecureMode, isConcurrentMode);
@@ -710,14 +750,14 @@ UT_ADD_TEST(VTS_L3_AudioSink, ASink_Concurrent_NonSecure)
 * This test verifies the flush scenario in concurrent mode.
 *
 * **Test Group ID:** 03@n
-* **Test Case ID:** 018@n
+* **Test Case ID:** 012@n
 *
 * **Test Procedure:**
 * Refer to UT specification documentation [audioSink_High-Level_TestSpecification.md](../../docs/pages/audioSink_High-Level_TestSpecification.md)
 */
 UT_ADD_TEST(VTS_L3_AudioSink, ASink_Concurrent_NonSecure_Flush)
 {
-    const char *testName = "Decode_Flush";
+    const char *testName = "Sink_Flush";
     bool isSecureMode = false;
     bool isConcurrentMode = true;
     runSingleProcessTest(testName, isSecureMode, isConcurrentMode);
@@ -729,14 +769,14 @@ UT_ADD_TEST(VTS_L3_AudioSink, ASink_Concurrent_NonSecure_Flush)
 * This test verifies the EOS scenario in concurrent mode.
 *
 * **Test Group ID:** 03@n
-* **Test Case ID:** 019@n
+* **Test Case ID:** 013@n
 *
 * **Test Procedure:**
 * Refer to UT specification documentation [audioSink_High-Level_TestSpecification.md](../../docs/pages/audioSink_High-Level_TestSpecification.md)
 */
 UT_ADD_TEST(VTS_L3_AudioSink, ASink_Concurrent_NonSecure_EOS)
 {
-    const char *testName = "Decode_EOS";
+    const char *testName = "Sink_EOS";
     bool isSecureMode = false;
     bool isConcurrentMode = true;
     runSingleProcessTest(testName, isSecureMode, isConcurrentMode);
@@ -748,14 +788,33 @@ UT_ADD_TEST(VTS_L3_AudioSink, ASink_Concurrent_NonSecure_EOS)
 * This test verifies the underflow scenario in concurrent mode.
 *
 * **Test Group ID:** 03@n
-* **Test Case ID:** 020@n
+* **Test Case ID:** 014@n
 *
 * **Test Procedure:**
 * Refer to UT specification documentation [audioSink_High-Level_TestSpecification.md](../../docs/pages/audioSink_High-Level_TestSpecification.md)
 */
 UT_ADD_TEST(VTS_L3_AudioSink, ASink_Concurrent_NonSecure_Underflow)
 {
-    const char *testName = "Decode_Underflow";
+    const char *testName = "Sink_Underflow";
+    bool isSecureMode = false;
+    bool isConcurrentMode = true;
+    runSingleProcessTest(testName, isSecureMode, isConcurrentMode);
+}
+
+/**
+* @brief Test the audio sink backpressure events (concurrent, non-secure)
+*
+* This test verifies the backpressure scenario in concurrent mode.
+*
+* **Test Group ID:** 03@n
+* **Test Case ID:** 015@n
+*
+* **Test Procedure:**
+* Refer to UT specification documentation [audioSink_High-Level_TestSpecification.md](../../docs/pages/audioSink_High-Level_TestSpecification.md)
+*/
+UT_ADD_TEST(VTS_L3_AudioSink, ASink_Concurrent_NonSecure_Backpressure)
+{
+    const char *testName = "Sink_Backpressure";
     bool isSecureMode = false;
     bool isConcurrentMode = true;
     runSingleProcessTest(testName, isSecureMode, isConcurrentMode);
@@ -768,14 +827,14 @@ UT_ADD_TEST(VTS_L3_AudioSink, ASink_Concurrent_NonSecure_Underflow)
 * This test verifies concurrent decode functionality in secure mode.
 *
 * **Test Group ID:** 03@n
-* **Test Case ID:** 021@n
+* **Test Case ID:** 016@n
 *
 * **Test Procedure:**
 * Refer to UT specification documentation [audioSink_High-Level_TestSpecification.md](../../docs/pages/audioSink_High-Level_TestSpecification.md)
 */
 UT_ADD_TEST(VTS_L3_AudioSink, ASink_Concurrent_Secure)
 {
-    const char *testName = "Decode";
+    const char *testName = "Sink_Basic";
     bool isSecureMode = true;
     bool isConcurrentMode = true;
     runSingleProcessTest(testName, isSecureMode, isConcurrentMode);
@@ -787,14 +846,14 @@ UT_ADD_TEST(VTS_L3_AudioSink, ASink_Concurrent_Secure)
 * This test verifies the flush scenario in concurrent and secure mode.
 *
 * **Test Group ID:** 03@n
-* **Test Case ID:** 022@n
+* **Test Case ID:** 017@n
 *
 * **Test Procedure:**
 * Refer to UT specification documentation [audioSink_High-Level_TestSpecification.md](../../docs/pages/audioSink_High-Level_TestSpecification.md)
 */
 UT_ADD_TEST(VTS_L3_AudioSink, ASink_Concurrent_Secure_Flush)
 {
-    const char *testName = "Decode_Flush";
+    const char *testName = "Sink_Flush";
     bool isSecureMode = true;
     bool isConcurrentMode = true;
 
@@ -807,14 +866,14 @@ UT_ADD_TEST(VTS_L3_AudioSink, ASink_Concurrent_Secure_Flush)
 * This test verifies the EOS scenario in concurrent and secure mode.
 *
 * **Test Group ID:** 03@n
-* **Test Case ID:** 023@n
+* **Test Case ID:** 018@n
 *
 * **Test Procedure:**
 * Refer to UT specification documentation [audioSink_High-Level_TestSpecification.md](../../docs/pages/audioSink_High-Level_TestSpecification.md)
 */
 UT_ADD_TEST(VTS_L3_AudioSink, ASink_Concurrent_Secure_EOS)
 {
-    const char *testName = "Decode_EOS";
+    const char *testName = "Sink_EOS";
     bool isSecureMode = true;
     bool isConcurrentMode = true;
     runSingleProcessTest(testName, isSecureMode, isConcurrentMode);
@@ -826,14 +885,33 @@ UT_ADD_TEST(VTS_L3_AudioSink, ASink_Concurrent_Secure_EOS)
 * This test verifies the underflow scenario in concurrent and secure mode.
 *
 * **Test Group ID:** 03@n
-* **Test Case ID:** 024@n
+* **Test Case ID:** 019@n
 *
 * **Test Procedure:**
 * Refer to UT specification documentation [audioSink_High-Level_TestSpecification.md](../../docs/pages/audioSink_High-Level_TestSpecification.md)
 */
 UT_ADD_TEST(VTS_L3_AudioSink, ASink_Concurrent_Secure_Underflow)
 {
-    const char *testName = "Decode_Underflow";
+    const char *testName = "Sink_Underflow";
+    bool isSecureMode = true;
+    bool isConcurrentMode = true;
+    runSingleProcessTest(testName, isSecureMode, isConcurrentMode);
+}
+
+/**
+* @brief Test the audio sink backpressure events (concurrent, secure)
+*
+* This test verifies the backpressure scenario in concurrent and secure mode.
+*
+* **Test Group ID:** 03@n
+* **Test Case ID:** 020@n
+*
+* **Test Procedure:**
+* Refer to UT specification documentation [audioSink_High-Level_TestSpecification.md](../../docs/pages/audioSink_High-Level_TestSpecification.md)
+*/
+UT_ADD_TEST(VTS_L3_AudioSink, ASink_Concurrent_Secure_Backpressure)
+{
+    const char *testName = "Sink_Backpressure";
     bool isSecureMode = true;
     bool isConcurrentMode = true;
     runSingleProcessTest(testName, isSecureMode, isConcurrentMode);

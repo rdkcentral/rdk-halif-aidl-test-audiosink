@@ -19,12 +19,12 @@
 # * limitations under the License.
 # *
 #** ******************************************************************************
-audiodecoder:
+audiosink:
   stream_download_path: "http://<>/streams" #`URL` path to download the audio test streams
   input_streams_path: "assets/streams/input" #Target path where input streams are stored
   reference_streams_path: "assets/streams/reference/" #Target path for reference PCM streams
   L3: #Test Level
-    Decode: #Test Name
+    Sink_Basic: #Test Name
       Controls:
         delay_between_decode_calls: -1 # Insert delay in msec between each `decodeBuffer()` call
         stop_start_pts: -1 #`pts` value in nano seconds at which the decoder should be stopped and restarted during the test. -1 indicates that decoder should not be restarted

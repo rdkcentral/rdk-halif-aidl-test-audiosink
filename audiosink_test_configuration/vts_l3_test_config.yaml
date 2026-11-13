@@ -23,7 +23,8 @@
 include_0: stream_configuration/vts_audio_aac_streams.yaml
 include_1: stream_configuration/vts_audio_ac3_streams.yaml
 
-include_2: audiosink_test_configuration/vts_l3_AudioDecode.yaml
-include_3: audiosink_test_configuration/vts_l3_AudioDecode_Flush.yaml
-include_4: audiosink_test_configuration/vts_l3_AudioDecode_EOS.yaml
-include_5: audiosink_test_configuration/vts_l3_AudioDecode_Underflow.yaml
+include_2: audiosink_test_configuration/vts_l3_AudioSink.yaml
+include_3: audiosink_test_configuration/vts_l3_AudioSink_Flush.yaml
+include_4: audiosink_test_configuration/vts_l3_AudioSink_EOS.yaml
+include_5: audiosink_test_configuration/vts_l3_AudioSink_Underflow.yaml
+include_6: audiosink_test_configuration/vts_l3_AudioSink_Backpressure.yaml

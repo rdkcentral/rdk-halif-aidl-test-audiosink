@@ -177,6 +177,7 @@ Status AudioSinkControllerListener::onFrameBufferAvailable()
         std::lock_guard<std::mutex> lock(mFrameBufferAvailableMutex);
         mFrameBufferAvailableCount++;
     }
+    mFrameBufferAvailableCV.notify_all();
     return Status::ok();
 }
 
@@ -189,6 +190,24 @@ int32_t AudioSinkControllerListener::getFrameBufferAvailableCount(bool reset)
         mFrameBufferAvailableCount = 0; // Reset the count if requested
     }
     return count;
+}
+
+/**
+ * @brief Waits for onFrameBufferAvailable callback for up to timeoutSeconds.
+ *
+ * @param timeoutSeconds Maximum wait in seconds.
+ * @return true if callback was observed, false otherwise.
+ */
+bool AudioSinkControllerListener::waitForFrameBufferAvailableEvent(std::chrono::milliseconds timeout)
+{
+    std::unique_lock<std::mutex> lock(mFrameBufferAvailableMutex);
+    const bool callbackReceived = mFrameBufferAvailableCV.wait_for(
+        lock, timeout, [this] { return mFrameBufferAvailableCount > 0; });
+    if (callbackReceived)
+    {
+        mFrameBufferAvailableCount = 0;
+    }
+    return callbackReceived;
 }
 
 /**

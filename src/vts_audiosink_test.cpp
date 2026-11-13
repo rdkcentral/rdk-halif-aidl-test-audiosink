@@ -110,8 +110,12 @@ void AudioSinkTest::setupClock()
     // Set the clock mode to Audio Master
     AVCLOCK_SET_CLOCK_MODE_SUCCESS(mClock, mClockController, ClockMode::AUDIO_MASTER, true);
 
-    // Start the clock
-    AVCLOCK_START_SUCCESS(mClock, mClockController, true);
+    // If backpressure test is enabled, dont start the clock at the beginning
+    if(!mTestConfiguration.isSinkBackpressure)
+    {
+        // Start the clock
+        AVCLOCK_START_SUCCESS(mClock, mClockController, true);
+    }
 }
 
 void AudioSinkTest::tearDownClock()
@@ -325,6 +329,28 @@ void AudioSinkTest::copyMetaData(const audiodecoder::FrameMetadata& source, audi
     destination.SoCPrivate = source.SoCPrivate;
 }
 
+bool AudioSinkTest::validateSinkBackpressure(const DecodedAudioFrame_t& decodedFrame,
+                                             audiodecoder::FrameMetadata& metadata)
+{
+    bool result = false;
+    mTestConfiguration.isSinkBackpressure = false;
+
+    AUDIOSINK_QUEUEAUDIOFRAME_FAILURE(mAudioSinkController, decodedFrame.framePTS, decodedFrame.frameBufferHandle, metadata, Status::EX_NONE);
+    AUDIOSINK_QUEUEAUDIOFRAME_FAILURE(mAudioSinkController, decodedFrame.framePTS, decodedFrame.frameBufferHandle, metadata, Status::EX_NONE);
+    AUDIOSINK_QUEUEAUDIOFRAME_FAILURE(mAudioSinkController, decodedFrame.framePTS, decodedFrame.frameBufferHandle, metadata, Status::EX_NONE);
+
+    // Start the clock to allow queued frames to be processed and free up space in the queue.
+    AVCLOCK_START_SUCCESS(mClock, mClockController, true);
+    result = mControlListener->waitForFrameBufferAvailableEvent(std::chrono::milliseconds(1000));
+    UT_ASSERT_TRUE(result);
+
+    result = false;
+    AUDIOSINK_QUEUEAUDIOFRAME_SUCCESS(mAudioSinkController, decodedFrame.framePTS,
+                                      decodedFrame.frameBufferHandle, metadata, result);
+    UT_ASSERT_TRUE(result);
+    return result;
+}
+
 void AudioSinkTest::queueDecodedFrameIfNonTunnel(const DecodedAudioFrame_t& decodedFrame,
                                                   OperationalMode operationalMode,
                                                   audiodecoder::FrameMetadata& metadata,
@@ -371,8 +397,16 @@ void AudioSinkTest::queueDecodedFrameIfNonTunnel(const DecodedAudioFrame_t& deco
                                           decodedFrame.frameBufferHandle, metadata, result);
         if (!result)
         {
+            if(mTestConfiguration.isSinkBackpressure)
+            {
+                if(validateSinkBackpressure(decodedFrame, metadata))
+                {
+                    return;
+                }
+            }
+
             UT_LOG_WARNING("[SinkID: %d] Failed to queue frame to audio sink, PTS: %lld, Buffer Handle: 0x%016" PRIx64,
-                           mSinkId.value, decodedFrame.framePTS, decodedFrame.frameBufferHandle);
+                mSinkId.value, decodedFrame.framePTS, decodedFrame.frameBufferHandle);
             AVBUFFER_FREE_SUCCESS(mAVBufferManager, decodedFrame.frameBufferHandle);
         }
     }
