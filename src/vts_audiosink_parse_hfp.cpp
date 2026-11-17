@@ -137,19 +137,30 @@ UT_status_t vts_audiosink_parseAudioSinkHFP()
 
     // Read platform capabilities attributes (existing)
     string lowlatency_path            = platformCapabilitesPath + ".supportsLowLatency";
-    string samplerate_path            = platformCapabilitesPath + ".systemMixerSampleRateHz";
-    string mixer_pcmformat_path       = platformCapabilitesPath + ".systemMixerPCMFormat";
+    string samplerates_path           = platformCapabilitesPath + ".supportedSampleRatesHz";
+    string pcmformats_path            = platformCapabilitesPath + ".supportedPCMFormats";
     string supportsPlanarFormat_path  = platformCapabilitesPath + ".supportsPlanarFormat";
     string supportsSoCProprietary_path = platformCapabilitesPath + ".supportsSoCProprietary";
     string maxNumChannels_path         = platformCapabilitesPath + ".maxNumChannels";
     string supportsDolbyAtmos_path     = platformCapabilitesPath + ".supportsDolbyAtmos";
 
     gAudiosinksHFP.platformCaps.supportsLowLatency = UT_KVP_PROFILE_GET_BOOL(lowlatency_path.c_str());
-    gAudiosinksHFP.platformCaps.systemMixerSampleRateHz = UT_KVP_PROFILE_GET_UINT32(samplerate_path.c_str());
+    gAudiosinksHFP.platformCaps.supportedSampleRatesHz.clear();
+    int32_t sampleRateCount = UT_KVP_PROFILE_GET_LIST_COUNT(samplerates_path.c_str());
+    for (int32_t j = 0; j < sampleRateCount; ++j)
+    {
+        string sampleRatePath = samplerates_path + "." + std::to_string(j);
+        gAudiosinksHFP.platformCaps.supportedSampleRatesHz.push_back(UT_KVP_PROFILE_GET_UINT32(sampleRatePath.c_str()));
+    }
 
-    UT_KVP_PROFILE_GET_STRING(mixer_pcmformat_path.c_str(), str_val);
-
-    gAudiosinksHFP.platformCaps.systemMixerPCMFormat = vts_audioDecoder_helper_StringToPCMFormat(std::string(str_val));
+    gAudiosinksHFP.platformCaps.supportedPCMFormats.clear();
+    int32_t pcmFormatCount = UT_KVP_PROFILE_GET_LIST_COUNT(pcmformats_path.c_str());
+    for (int32_t j = 0; j < pcmFormatCount; ++j)
+    {
+        string pcmFormatPath = pcmformats_path + "." + std::to_string(j);
+        UT_KVP_PROFILE_GET_STRING(pcmFormatPath.c_str(), str_val);
+        gAudiosinksHFP.platformCaps.supportedPCMFormats.push_back(vts_audioDecoder_helper_StringToPCMFormat(std::string(str_val)));
+    }
     gAudiosinksHFP.platformCaps.supportsPlanarFormat = UT_KVP_PROFILE_GET_BOOL(supportsPlanarFormat_path.c_str());
     gAudiosinksHFP.platformCaps.maxNumChannels = UT_KVP_PROFILE_GET_UINT32(maxNumChannels_path.c_str());
     gAudiosinksHFP.platformCaps.supportsDolbyAtmos = UT_KVP_PROFILE_GET_BOOL(supportsDolbyAtmos_path.c_str());

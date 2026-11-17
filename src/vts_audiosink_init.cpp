@@ -68,6 +68,8 @@
 #include "vts_audiosink_parse_hfp.h"
 #include "vts_audiodecoder_parse_testconfig.h"
 
+#define VTS_AUDIOSINK_TEST_CONFIG_PATH "./audiosink_test_configuration/vts_l3_test_config.yaml"
+
 sp<IAudioSinkManager> gAudioSinkManager;
 void *gAudioSinkTestConfiguration = nullptr;
 

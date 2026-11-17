@@ -40,8 +40,10 @@ audiosink:
 
   platformCapabilities:
     supportsLowLatency: false
-    systemMixerSampleRateHz: 48000
-    systemMixerPCMFormat: S32BE
+    supportedSampleRatesHz:
+      - 48000
+    supportedPCMFormats:
+      - S32BE
     supportsPlanarFormat: false
     supportsSoCProprietary: false
     maxNumChannels: 2

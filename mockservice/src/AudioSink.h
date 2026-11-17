@@ -79,7 +79,6 @@ namespace com {
 
                  android::binder::Status getCapabilities( audiosink::Capabilities* _aidl_return ) override;
                  android::binder::Status getProperty( audiosink::Property property, std::optional<PropertyValue>* _aidl_return ) override;
-                 android::binder::Status setProperty( audiosink::Property property, const PropertyValue& propertyValue, bool* _aidl_return ) override;
                  android::binder::Status getState( State* _aidl_return ) override;
                  android::binder::Status open(ContentType contentType, const android::sp<audiosink::IAudioSinkControllerListener>& audioSinkControllerListener, android::sp<audiosink::IAudioSinkController>* _aidl_return ) override;
                  android::binder::Status close( const android::sp<audiosink::IAudioSinkController>& audioSinkController, bool* _aidl_return ) override;
@@ -107,6 +106,7 @@ namespace com {
                  android::binder::Status attachClock(const ::com::rdk::hal::avclock::IAVClock::Id& clockId) override;
                  android::binder::Status detachClock() override;
                  android::binder::Status getClock(::com::rdk::hal::avclock::IAVClock::Id* _aidl_return) override;
+                 android::binder::Status setProperty( audiosink::Property property, const PropertyValue& propertyValue, bool* _aidl_return ) override;
                  android::binder::Status start() override;
                  android::binder::Status stop() override;
                  android::binder::Status queueAudioFrame( int64_t nsPresentationTime, int64_t bufferHandle, const ::com::rdk::hal::audiodecoder::FrameMetadata& metadata, bool* _aidl_return ) override;
