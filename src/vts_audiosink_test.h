@@ -165,7 +165,7 @@ private:
     void queueDecodedFrameIfNonTunnel(const DecodedAudioFrame_t& decodedFrame,
                                       OperationalMode operationalMode,
                                       audiodecoder::FrameMetadata& metadata,
-                                      bool& flushDone);
+                                      bool& flushDone, bool isFirstFrame);
     bool validateSinkBackpressure(const DecodedAudioFrame_t& decodedFrame,
                                   audiodecoder::FrameMetadata& metadata);
     void validateMetric();

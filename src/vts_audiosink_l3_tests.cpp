@@ -719,7 +719,7 @@ UT_ADD_TEST(VTS_L3_AudioSink, ASink_Sequential_Secure_Underflow)
 */
 UT_ADD_TEST(VTS_L3_AudioSink, ASink_Sequential_Secure_Backpressure)
 {
-    const char *testName = "Sink_Backpressure";
+    const char *testName = "Sink_BackPressure";
     bool isSecureMode = true;
     bool isConcurrentMode = false;
     runSingleProcessTest(testName, isSecureMode, isConcurrentMode);
@@ -814,7 +814,7 @@ UT_ADD_TEST(VTS_L3_AudioSink, ASink_Concurrent_NonSecure_Underflow)
 */
 UT_ADD_TEST(VTS_L3_AudioSink, ASink_Concurrent_NonSecure_Backpressure)
 {
-    const char *testName = "Sink_Backpressure";
+    const char *testName = "Sink_BackPressure";
     bool isSecureMode = false;
     bool isConcurrentMode = true;
     runSingleProcessTest(testName, isSecureMode, isConcurrentMode);
@@ -911,7 +911,7 @@ UT_ADD_TEST(VTS_L3_AudioSink, ASink_Concurrent_Secure_Underflow)
 */
 UT_ADD_TEST(VTS_L3_AudioSink, ASink_Concurrent_Secure_Backpressure)
 {
-    const char *testName = "Sink_Backpressure";
+    const char *testName = "Sink_BackPressure";
     bool isSecureMode = true;
     bool isConcurrentMode = true;
     runSingleProcessTest(testName, isSecureMode, isConcurrentMode);

@@ -27,4 +27,4 @@ include_2: audiosink_test_configuration/vts_l3_AudioSink.yaml
 include_3: audiosink_test_configuration/vts_l3_AudioSink_Flush.yaml
 include_4: audiosink_test_configuration/vts_l3_AudioSink_EOS.yaml
 include_5: audiosink_test_configuration/vts_l3_AudioSink_Underflow.yaml
-include_6: audiosink_test_configuration/vts_l3_AudioSink_Backpressure.yaml
+include_6: audiosink_test_configuration/vts_l3_AudioSink_BackPressure.yaml

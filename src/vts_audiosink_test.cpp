@@ -189,6 +189,7 @@ void AudioSinkTest::cleanupAudioDecoder()
             }
         }
     }
+    mdecoderControlListener->resetEndOfStream();
 }
 
 void AudioSinkTest::validateCallbacks(int64_t expectedFirstFramePTS, bool expectUnderflow, bool expectResume)
@@ -354,7 +355,8 @@ bool AudioSinkTest::validateSinkBackpressure(const DecodedAudioFrame_t& decodedF
 void AudioSinkTest::queueDecodedFrameIfNonTunnel(const DecodedAudioFrame_t& decodedFrame,
                                                   OperationalMode operationalMode,
                                                   audiodecoder::FrameMetadata& metadata,
-                                                  bool& flushDone)
+                                                  bool& flushDone,
+                                                  bool isFirstFrame)
 {
     if(operationalMode == OperationalMode::NON_TUNNELLED && decodedFrame.frameBufferHandle == -1)
     {
@@ -409,6 +411,14 @@ void AudioSinkTest::queueDecodedFrameIfNonTunnel(const DecodedAudioFrame_t& deco
                 mSinkId.value, decodedFrame.framePTS, decodedFrame.frameBufferHandle);
             AVBUFFER_FREE_SUCCESS(mAVBufferManager, decodedFrame.frameBufferHandle);
         }
+        else
+        {
+            if(mTestConfiguration.isSinkBackpressure && isFirstFrame)
+            {
+                UT_LOG_ERROR("[SinkID: %d] queueAudioFrame sucessful even though clock is not started", mSinkId.value);
+                UT_ASSERT_TRUE(false);
+            }
+        }
     }
 }
 
@@ -446,7 +456,10 @@ void AudioSinkTest::run()
                 retryCount++;
                 UT_LOG_ERROR("[Audio DecoderID: %d, SinkID: %d] decoded frame not received within %d ms",
                                      mDecoderId.value, mSinkId.value, MAX_FRAME_WAIT_TIME);
-                UT_ASSERT_TRUE(false);
+
+                /* Report failure only if test is not underflow test */
+                if(mTestConfiguration.decoderDelay < MAX_FRAME_WAIT_TIME)
+                    UT_ASSERT_TRUE(false);
 
                 if(retryCount < MAX_RETRY_COUNT)
                 {
@@ -475,9 +488,15 @@ void AudioSinkTest::run()
                     UT_ASSERT_TRUE(false);
                     break;
                 }
+
+                /* Start the clock if the decoder is tunnelled and sink backpressure is enabled */
+                if (operationalMode == OperationalMode::TUNNELLED && mTestConfiguration.isSinkBackpressure)
+                {
+                    AVCLOCK_START_SUCCESS(mClock, mClockController, true);
+                }
             }
 
-            queueDecodedFrameIfNonTunnel(decodedFrame, operationalMode, metadata, flushDone);
+            queueDecodedFrameIfNonTunnel(decodedFrame, operationalMode, metadata, flushDone, (frameCount == 1));
 
             std::optional<PropertyValue> latencyValue;
             AUDIOSINK_GET_PROPERTY_SUCCESS(mSinkHandle, audiosink::Property::RENDER_LATENCY_NS, latencyValue);
