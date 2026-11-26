@@ -73,6 +73,7 @@
 #include <inttypes.h>
 
 #include "vts_audiodecoder.h"
+#include "vts_audiodecoder_test.h"
 #include "vts_avbuffer.h"
 #include "vts_avclock.h"
 
@@ -162,16 +163,16 @@ extern sp<IAudioSinkManager> gAudioSinkManager;
         UT_ASSERT_EQUAL(status.exceptionCode(), exception); \
     } while (0)
 
-#define AUDIODSINK_GETCAPABILITIES(audioSink, capabilities) \
+#define AUDIOSINK_GETCAPABILITIES(audioSink, capabilities) \
     do { \
         ::android::binder::Status status; \
         UT_LOG_INFO("Calling getCapabilities(OUT:capabilities)"); \
-        status = (audioSink)->getCapabilities(&capabilities); \
+        status = (audioSink)->getCapabilities(capabilities); \
         UT_LOG_INFO("Result getCapabilities(OUT:capabilities), status:[isOK:%s, exception:%s]", \
                                 UT_Control_GetMapString(bool_mapTable, status.isOk()), \
                                 UT_Control_GetMapString(statusException_mapTable, status.exceptionCode())); \
         UT_ASSERT_TRUE(status.isOk()); \
-        UT_ASSERT_NOT_EQUAL(&capabilities, nullptr); \
+        UT_ASSERT_NOT_EQUAL(capabilities, nullptr); \
         UT_ASSERT_EQUAL(status.exceptionCode(), Status::EX_NONE); \
     } while (0)
 
@@ -190,7 +191,7 @@ extern sp<IAudioSinkManager> gAudioSinkManager;
                 break; \
             case PropertyValue::Value::Tag::stringValue: \
                 UT_LOG_INFO("Result getProperty(IN:property[%s], OUT:propertyValue[%s]), status:[isOK:%s, exception:%s]", audiosink::toString(property).c_str(), \
-                propertyValue->value->get<PropertyValue::Value::Tag::stringValue>().string(), \
+                propertyValue->value->get<PropertyValue::Value::Tag::stringValue>().c_str(), \
                 UT_Control_GetMapString(bool_mapTable, status.isOk()), \
                 UT_Control_GetMapString(statusException_mapTable, status.exceptionCode())); \
                 break; \
@@ -562,7 +563,6 @@ extern sp<IAudioSinkManager> gAudioSinkManager;
         status = (audioSinkcontroller)->queueAudioFrame(nsPresentationTime, bufferHandle, metadata, &result); \
         UT_LOG_INFO("Result queueAudioFrame(IN:nsPresentationTime:[%lld], IN:bufferHandle:[0x%016" PRIx64 "], IN:metadata:[], OUT:_aidl_return[%s])", \
                     nsPresentationTime, bufferHandle, UT_Control_GetMapString(bool_mapTable, result)); \
-        UT_ASSERT_TRUE(result); \
         UT_ASSERT_EQUAL(status.exceptionCode(), Status::EX_NONE); \
         UT_ASSERT_TRUE(status.isOk()); \
     } while(0)
@@ -580,8 +580,13 @@ extern sp<IAudioSinkManager> gAudioSinkManager;
         UT_LOG_INFO("Result queueAudioFrame(IN:nsPresentationTime:[%lld], IN:bufferHandle:[0x%016" PRIx64 "], IN:metadata:[sourceCodec:%d, isDolbyAtmos:%d, numChannels:%d, sampleRate:%d, format:%d, source:%d]), status:[isOK:%s, exception:%s]", \
                     nsPresentationTime, bufferHandle, static_cast<int>((metadata).sourceCodec), (metadata).isDolbyAtmos, _numChannels, _sampleRate, _format, static_cast<int>((metadata).source), \
                     UT_Control_GetMapString(bool_mapTable, status.isOk()), UT_Control_GetMapString(statusException_mapTable, status.exceptionCode())); \
+        if ((exception) == Status::EX_NONE) { \
+            UT_ASSERT_TRUE(status.isOk()); \
+            UT_ASSERT_FALSE(aidl_return); \
+        } else { \
+            UT_ASSERT_FALSE(status.isOk()); \
+        } \
         UT_ASSERT_EQUAL(status.exceptionCode(), exception); \
-        UT_ASSERT_FALSE(status.isOk()); \
     } while(0)
 
 #define AUDIOSINK_FLUSH_SUCCESS(audioSink, audioSinkController, stateCheck) \
@@ -639,13 +644,13 @@ extern sp<IAudioSinkManager> gAudioSinkManager;
         UT_ASSERT_EQUAL(status.exceptionCode(), exception); \
     } while (0)
 
-#define AUDIOSINK_SETPROPERTY_SUCCESS(audioSink, property, propertyValue) \
+#define AUDIOSINK_SETPROPERTY_SUCCESS(audioSinkController, property, propertyValue) \
     do { \
         ::android::binder::Status status; \
         bool _aidl_return; \
         UT_LOG_INFO("Calling setProperty(IN:property[%s], IN:propertyValue[0x%X], OUT:_aidl_return[])", com::rdk::hal::audiosink::toString(property).c_str(), \
                       propertyValue.value); \
-        status = (audioSink)->setProperty(property, propertyValue, &_aidl_return); \
+        status = (audioSinkController)->setProperty(property, propertyValue, &_aidl_return); \
         UT_LOG_INFO("Result setProperty(IN:property[%s], IN:propertyValue[0x%X], OUT:_aidl_return[%s]), status:[isOK:%s, exception:%s]", com::rdk::hal::audiosink::toString(property).c_str(), propertyValue.value, \
             UT_Control_GetMapString(bool_mapTable, _aidl_return), \
             UT_Control_GetMapString(bool_mapTable, status.isOk()), \
@@ -655,12 +660,12 @@ extern sp<IAudioSinkManager> gAudioSinkManager;
         UT_ASSERT_EQUAL(status.exceptionCode(), Status::EX_NONE); \
     } while (0)
 
-#define AUDIOSINK_SETPROPERTY_FAILURE(audioSink, property, propertyValue, exception) \
+#define AUDIOSINK_SETPROPERTY_FAILURE(audioSinkController, property, propertyValue, exception) \
     do { \
         ::android::binder::Status status; \
         bool _aidl_return = false; \
         UT_LOG_INFO("Calling setProperty(IN:property[%s], IN:propertyValue[0x%X], OUT:_aidl_return[])", com::rdk::hal::audiosink::toString(property).c_str(), propertyValue.value); \
-        status = (audioSink)->setProperty(property, propertyValue, &_aidl_return); \
+        status = (audioSinkController)->setProperty(property, propertyValue, &_aidl_return); \
         UT_LOG_INFO("Result setProperty(IN:property[%s], IN:propertyValue[0x%X]), status:[isOK:%s, exception:%s]", com::rdk::hal::audiosink::toString(property).c_str(), propertyValue.value, \
             UT_Control_GetMapString(bool_mapTable, status.isOk()), \
             UT_Control_GetMapString(statusException_mapTable, status.exceptionCode())); \
@@ -765,23 +770,23 @@ extern sp<IAudioSinkManager> gAudioSinkManager;
         UT_ASSERT_EQUAL(status.exceptionCode(), exception); \
     }while (0)
 
-#define AUDIOSINK_SETPROPERTY_LIST_SUCCESS(audioSink, properyList, type) \
+#define AUDIOSINK_SETPROPERTY_LIST_SUCCESS(audioSinkController, properyList, type) \
     do { \
         for (const auto& [property, value] : properyList) \
         { \
             PropertyValue propertyValue; \
             propertyValue.value = PropertyValue::Value::make<PropertyValue::Value::Tag::type>(value); \
-            AUDIOSINK_SETPROPERTY_SUCCESS(audioSink, property, propertyValue); \
+            AUDIOSINK_SETPROPERTY_SUCCESS(audioSinkController, property, propertyValue); \
         } \
     } while (0)
 
-#define AUDIOSINK_SETPROPERTY_LIST_FAILURE(audioSink, properyList, type, exception) \
+#define AUDIOSINK_SETPROPERTY_LIST_FAILURE(audioSinkController, properyList, type, exception) \
     do { \
         for (const auto& [property, value] : properyList) \
         { \
             PropertyValue propertyValue; \
             propertyValue.value = PropertyValue::Value::make<PropertyValue::Value::Tag::type>(value); \
-            AUDIOSINK_SETPROPERTY_FAILURE(audioSink, property, propertyValue, exception); \
+            AUDIOSINK_SETPROPERTY_FAILURE(audioSinkController, property, propertyValue, exception); \
         } \
     } while (0)
 
@@ -792,8 +797,8 @@ public:
        : BnAudioSinkControllerListener(),
          mUnderFlowCount(0),
          mFlushCompleteCount(0),
-         mFrameBufferAvailableCount(0),
-         mSinkID(sinkID)
+         mSinkID(sinkID),
+         mFrameBufferAvailableCount(0)
     {
     }
     virtual ~AudioSinkControllerListener() = default;
@@ -815,6 +820,7 @@ public:
     int32_t getUnderFlowCount(bool reset);
     int32_t getFlushCompleteCount(bool reset);
     int32_t getFrameBufferAvailableCount(bool reset);
+    bool waitForFrameBufferAvailableEvent(std::chrono::milliseconds timeout);
 private:
     mutable mutex mStateMutex;
     mutable mutex mFFMutex;
@@ -827,6 +833,7 @@ private:
     condition_variable mFFRenderAvailable;
     condition_variable mEOSAvailable;
     condition_variable mResumeAvailable;
+    condition_variable mFrameBufferAvailableCV;
     ::com::rdk::hal::audiosink::State mCurrentState = ::com::rdk::hal::audiosink::State::CLOSED;
     vector<std::pair<::com::rdk::hal::audiosink::State, ::com::rdk::hal::audiosink::State>> mStateChanges;
     queue<int64_t> mFirstframerendered;
@@ -944,71 +951,6 @@ private:
     std::condition_variable mPrimedCondition;
     bool mPrimed = false;
     ::com::rdk::hal::avclock::ClockTime mFirstPrimedClockTime{};
-};
-
-class AudioSinkTest
-{
-public:
-    AudioSinkTest(IAudioSink::Id sinkId,
-                  sp<IAudioSink> sinkHandle,
-                  sp<AudioSinkControllerListener> controlListener,
-                  sp<AudioSinkEventListener> eventListener,
-                  sp<AudioDecoderControllerListener> decoderControlListener,
-                  sp<IAVBuffer> AVBufferManager,
-                  IAudioDecoder::Id decoderId,
-                  IAVClock::Id clockId,
-                  bool secureDecode, bool isTunnel, const testConfiguration_t& config, bool isClockInUse)
-    {
-        mSinkId = sinkId;
-        mDecoderId = decoderId;
-        mSinkHandle = sinkHandle;
-        mControlListener = controlListener;
-        mSecureBuffer = secureDecode;
-        mEventListener = eventListener;
-        mTestConfiguration = config;
-        mAVBufferManager = AVBufferManager;
-        mdecoderControlListener = decoderControlListener;
-        mIsTunnel = isTunnel;
-        mClockId = clockId;
-        mClockInUse = isClockInUse;
-        mClockCtrlListener = new AudioSinkAVClockControllerListener();
-    }
-
-    void run();
-    bool hasFrameOutputModeMismatch() const { return mFrameOutputModeMismatch; }
-
-private:
-    IAudioSink::Id mSinkId;
-    IAudioDecoder::Id mDecoderId;
-    IAVClock::Id mClockId;
-    sp<IAudioSink> mSinkHandle;
-    sp<AudioSinkControllerListener> mControlListener;
-    sp<AudioSinkEventListener> mEventListener;
-    sp<IAVBuffer> mAVBufferManager;
-    sp<AudioDecoderControllerListener> mdecoderControlListener;
-    bool mSecureBuffer;
-    bool mIsTunnel;
-    bool mClockInUse;
-    bool mFrameOutputModeMismatch = false;
-    testConfiguration_t mTestConfiguration;
-    sp<IAudioSinkController> mAudioSinkController;
-    sp<IAVClock> mClock;
-    sp<IAVClockController> mClockController;
-    sp<AudioSinkAVClockControllerListener> mClockCtrlListener;
-
-    void audioSinkNonTunnelTest();
-    void audioSinkTunnelTest();
-
-    void setupClock();
-    void tearDownClock();
-    void setupAudioSink();
-    void tearDownAudioSink();
-    void validateCallbacks(int64_t expectedFirstFramePTS, bool expectUnderflow, bool expectResume);
-    void copyMetaData(const audiodecoder::FrameMetadata& source, audiodecoder::FrameMetadata& destination);
-    void queueDecodedFrameIfNonTunnel(const DecodedAudioFrame_t& decodedFrame,
-                                      audiodecoder::FrameMetadata& metadata,
-                                      bool& flushDone);
-    void validateMetric();
 };
 
 #endif //__VTS_AUDIOSINK_H__
