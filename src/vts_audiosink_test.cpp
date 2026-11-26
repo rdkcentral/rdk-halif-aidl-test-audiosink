@@ -342,7 +342,7 @@ bool AudioSinkTest::validateSinkBackpressure(const DecodedAudioFrame_t& decodedF
 
     // Start the clock to allow queued frames to be processed and free up space in the queue.
     AVCLOCK_START_SUCCESS(mClock, mClockController, true);
-    result = mControlListener->waitForFrameBufferAvailableEvent(std::chrono::milliseconds(1000));
+    result = mControlListener->waitForFrameBufferAvailableEvent(std::chrono::milliseconds(MAX_FRAME_WAIT_TIME));
     UT_ASSERT_TRUE(result);
 
     result = false;
@@ -355,8 +355,7 @@ bool AudioSinkTest::validateSinkBackpressure(const DecodedAudioFrame_t& decodedF
 void AudioSinkTest::queueDecodedFrameIfNonTunnel(const DecodedAudioFrame_t& decodedFrame,
                                                   OperationalMode operationalMode,
                                                   audiodecoder::FrameMetadata& metadata,
-                                                  bool& flushDone,
-                                                  bool isFirstFrame)
+                                                  bool& flushDone)
 {
     if(operationalMode == OperationalMode::NON_TUNNELLED && decodedFrame.frameBufferHandle == -1)
     {
@@ -409,11 +408,25 @@ void AudioSinkTest::queueDecodedFrameIfNonTunnel(const DecodedAudioFrame_t& deco
 
             UT_LOG_WARNING("[SinkID: %d] Failed to queue frame to audio sink, PTS: %lld, Buffer Handle: 0x%016" PRIx64,
                 mSinkId.value, decodedFrame.framePTS, decodedFrame.frameBufferHandle);
-            AVBUFFER_FREE_SUCCESS(mAVBufferManager, decodedFrame.frameBufferHandle);
+
+            /* Retry queuing the audio frame after waiting for buffer available event */
+            result = mControlListener->waitForFrameBufferAvailableEvent(std::chrono::milliseconds(MAX_FRAME_WAIT_TIME));
+            UT_ASSERT_TRUE(result);
+
+            result = false;
+            AUDIOSINK_QUEUEAUDIOFRAME_SUCCESS(mAudioSinkController, decodedFrame.framePTS,
+                                              decodedFrame.frameBufferHandle, metadata, result);
+
+            if (!result)
+            {
+                UT_LOG_ERROR("[SinkID: %d] Failed to queue frame to audio sink after waiting for buffer available event", mSinkId.value);
+                UT_ASSERT_TRUE(false);
+                AVBUFFER_FREE_SUCCESS(mAVBufferManager, decodedFrame.frameBufferHandle);
+            }
         }
         else
         {
-            if(mTestConfiguration.isSinkBackpressure && isFirstFrame)
+            if(mTestConfiguration.isSinkBackpressure)
             {
                 UT_LOG_ERROR("[SinkID: %d] queueAudioFrame sucessful even though clock is not started", mSinkId.value);
                 UT_ASSERT_TRUE(false);
@@ -496,7 +509,7 @@ void AudioSinkTest::run()
                 }
             }
 
-            queueDecodedFrameIfNonTunnel(decodedFrame, operationalMode, metadata, flushDone, (frameCount == 1));
+            queueDecodedFrameIfNonTunnel(decodedFrame, operationalMode, metadata, flushDone);
 
             std::optional<PropertyValue> latencyValue;
             AUDIOSINK_GET_PROPERTY_SUCCESS(mSinkHandle, audiosink::Property::RENDER_LATENCY_NS, latencyValue);

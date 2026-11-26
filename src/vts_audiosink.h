@@ -563,7 +563,6 @@ extern sp<IAudioSinkManager> gAudioSinkManager;
         status = (audioSinkcontroller)->queueAudioFrame(nsPresentationTime, bufferHandle, metadata, &result); \
         UT_LOG_INFO("Result queueAudioFrame(IN:nsPresentationTime:[%lld], IN:bufferHandle:[0x%016" PRIx64 "], IN:metadata:[], OUT:_aidl_return[%s])", \
                     nsPresentationTime, bufferHandle, UT_Control_GetMapString(bool_mapTable, result)); \
-        UT_ASSERT_TRUE(result); \
         UT_ASSERT_EQUAL(status.exceptionCode(), Status::EX_NONE); \
         UT_ASSERT_TRUE(status.isOk()); \
     } while(0)
@@ -581,8 +580,13 @@ extern sp<IAudioSinkManager> gAudioSinkManager;
         UT_LOG_INFO("Result queueAudioFrame(IN:nsPresentationTime:[%lld], IN:bufferHandle:[0x%016" PRIx64 "], IN:metadata:[sourceCodec:%d, isDolbyAtmos:%d, numChannels:%d, sampleRate:%d, format:%d, source:%d]), status:[isOK:%s, exception:%s]", \
                     nsPresentationTime, bufferHandle, static_cast<int>((metadata).sourceCodec), (metadata).isDolbyAtmos, _numChannels, _sampleRate, _format, static_cast<int>((metadata).source), \
                     UT_Control_GetMapString(bool_mapTable, status.isOk()), UT_Control_GetMapString(statusException_mapTable, status.exceptionCode())); \
+        if ((exception) == Status::EX_NONE) { \
+            UT_ASSERT_TRUE(status.isOk()); \
+            UT_ASSERT_FALSE(aidl_return); \
+        } else { \
+            UT_ASSERT_FALSE(status.isOk()); \
+        } \
         UT_ASSERT_EQUAL(status.exceptionCode(), exception); \
-        UT_ASSERT_FALSE(status.isOk()); \
     } while(0)
 
 #define AUDIOSINK_FLUSH_SUCCESS(audioSink, audioSinkController, stateCheck) \
