@@ -544,6 +544,9 @@ UT_ADD_TEST(VTS_L1_AudioSink, setProperty_pos)
         /* set the properties which can be set after Ready */
         AUDIOSINK_SETPROPERTY_LIST_SUCCESS(audioSinkController, validIntPropertyReady, intValue);
 
+        // set the audio decoder for the audio sink controller
+        AUDIOSINK_SETAUDIODECODER_SUCCESS(audioSinkController, IAudioDecoder::Id::EXTERNAL);
+
         /* Start the sink */
         AUDIOSINK_START_SUCCESS(audioSink, audioSinkController, true);
 
@@ -612,6 +615,9 @@ UT_ADD_TEST(VTS_L1_AudioSink, setProperty_neg)
 
         /* set the properties which can be set after Ready */
         AUDIOSINK_SETPROPERTY_LIST_FAILURE(audioSinkController, invalidIntPropertyReady, intValue, Status::EX_ILLEGAL_ARGUMENT);
+
+        // set the audio decoder for the audio sink controller
+        AUDIOSINK_SETAUDIODECODER_SUCCESS(audioSinkController, IAudioDecoder::Id::EXTERNAL);
 
         /* Start the sink */
         AUDIOSINK_START_SUCCESS(audioSink, audioSinkController, true);
@@ -1260,6 +1266,9 @@ UT_ADD_TEST(VTS_L1_AudioSink, setAudioDecoder_neg)
         // Test with invalid ID (highest value +1)
         AUDIOSINK_SETAUDIODECODER_FAILURE(audioSinkController, invalidHighId, Status::EX_NONE);
 
+        // set the audio decoder for the audio sink controller
+        AUDIOSINK_SETAUDIODECODER_SUCCESS(audioSinkController, IAudioDecoder::Id::EXTERNAL);
+
         // Test Case 4: Resource Not in READY State
         // Transition to a non-READY state (e.g., STARTED)
         AUDIOSINK_START_SUCCESS(audioSink, audioSinkController, true);
@@ -1329,11 +1338,14 @@ UT_ADD_TEST(VTS_L1_AudioSink, getAudioDecoder_pos)
 
         UT_ASSERT_EQUAL(audiodecoderId.value, IAudioDecoder::Id::UNDEFINED);
 
+        // set the audio decoder for the audio sink controller
+        AUDIOSINK_SETAUDIODECODER_SUCCESS(audioSinkController, IAudioDecoder::Id::EXTERNAL);
+
         AUDIOSINK_START_SUCCESS(audioSink, audioSinkController, true);
 
         AUDIOSINK_GETAUDIODECODER_SUCCESS(audioSinkController, audiodecoderId);
 
-        UT_ASSERT_EQUAL(audiodecoderId.value, IAudioDecoder::Id::UNDEFINED);
+        UT_ASSERT_EQUAL(audiodecoderId.value, IAudioDecoder::Id::EXTERNAL);
 
         //Stop the Audio sink
         AUDIOSINK_STOP_SUCCESS(audioSink, audioSinkController, true);
@@ -1402,6 +1414,9 @@ UT_ADD_TEST(VTS_L1_AudioSink, attachClock_pos)
             AUDIOSINK_ATTACHCLOCK_SUCCESS(audioSinkController, id);
             AUDIOSINK_ATTACHCLOCK_SUCCESS(audioSinkController, IAVClock::Id::UNDEFINED);
         }
+
+        // set the audio decoder for the audio sink controller
+        AUDIOSINK_SETAUDIODECODER_SUCCESS(audioSinkController, IAudioDecoder::Id::EXTERNAL);
 
         // Transition to a non-READY state (e.g., STARTED)
         AUDIOSINK_START_SUCCESS(audioSink, audioSinkController, true);
@@ -1484,6 +1499,9 @@ UT_ADD_TEST(VTS_L1_AudioSink, attachClock_neg)
         AUDIOSINK_ATTACHCLOCK_FAILURE(audioSinkController, invalidLowId, Status::EX_ILLEGAL_ARGUMENT);
         AUDIOSINK_ATTACHCLOCK_FAILURE(audioSinkController, invalidHighId, Status::EX_ILLEGAL_ARGUMENT);
 
+        // set the audio decoder for the audio sink controller
+        AUDIOSINK_SETAUDIODECODER_SUCCESS(audioSinkController, IAudioDecoder::Id::EXTERNAL);
+
         // Transition to a non-READY state (e.g., STARTED)
         AUDIOSINK_START_SUCCESS(audioSink, audioSinkController, true);
 
@@ -1551,6 +1569,9 @@ UT_ADD_TEST(VTS_L1_AudioSink, detachClock_pos)
             AUDIOSINK_ATTACHCLOCK_SUCCESS(audioSinkController, id);
             AUDIOSINK_DETACHCLOCK_SUCCESS(audioSinkController);
         }
+
+        // set the audio decoder for the audio sink controller
+        AUDIOSINK_SETAUDIODECODER_SUCCESS(audioSinkController, IAudioDecoder::Id::EXTERNAL);
 
         // Transition to a non-READY state (e.g., STARTED)
         AUDIOSINK_START_SUCCESS(audioSink, audioSinkController, true);
@@ -1620,6 +1641,9 @@ UT_ADD_TEST(VTS_L1_AudioSink, getClock_pos)
         AUDIOSINK_GETCLOCK_SUCCESS(audioSinkController, clockId);
         UT_ASSERT_EQUAL(clockId.value, IAVClock::Id::UNDEFINED);
 
+        // set the audio decoder for the audio sink controller
+        AUDIOSINK_SETAUDIODECODER_SUCCESS(audioSinkController, IAudioDecoder::Id::EXTERNAL);
+
         // Transition to a non-READY state (e.g., STARTED)
         AUDIOSINK_START_SUCCESS(audioSink, audioSinkController, true);
 
@@ -1678,6 +1702,9 @@ UT_ADD_TEST(VTS_L1_AudioSink, start_pos)
         //set state to READY by invoking `open` (set-up)
         AUDIOSINK_OPEN_SUCCESS(audioSink, ContentType::UNKNOWN, controllerListener, audioSinkController, true);
 
+        // set the audio decoder for the audio sink controller
+        AUDIOSINK_SETAUDIODECODER_SUCCESS(audioSinkController, IAudioDecoder::Id::EXTERNAL);
+
         // Transition to a non-READY state (e.g., STARTED)
         AUDIOSINK_START_SUCCESS(audioSink, audioSinkController, true);
 
@@ -1708,10 +1735,11 @@ UT_ADD_TEST(VTS_L1_AudioSink, start_pos)
  * | Variation / Step | Description | Test Data | Expected Result | Notes |
  * | :----: | --------- | ---------- |-------------- | ----- |
  * | 01 | Verify mControllers and mAudioSinks are not empty | mControllers.size(), mAudioSinks.size() | Should be successful | Should be successful |
- * | 02 | Call start() on each controller to change to STARTED state | controller[i]->start() | Status is OK | Should be successful |
- * | 03 | Call start() again on each controller | controller[i]->start() | Status is EX_ILLEGAL_STATE | Should Fail |
- * | 04 | Verify the exception code is EX_ILLEGAL_STATE | status.exceptionCode() | EX_ILLEGAL_STATE | Should Fail |
- * | 05 | Call stop() on each controller as teardown | controller[i]->stop() | Status is OK | Done by Pre-requisite TearDown function |
+ * | 02 | Call start() on each controller without assigning an audio decoder | controller[i]->start() | Status is EX_ILLEGAL_STATE | Should Fail |
+ * | 03 | Call start() on each controller to change to STARTED state | controller[i]->start() | Status is OK | Should be successful |
+ * | 04 | Call start() again on each controller | controller[i]->start() | Status is EX_ILLEGAL_STATE | Should Fail |
+ * | 05 | Verify the exception code is EX_ILLEGAL_STATE | status.exceptionCode() | EX_ILLEGAL_STATE | Should Fail |
+ * | 06 | Call stop() on each controller as teardown | controller[i]->stop() | Status is OK | Done by Pre-requisite TearDown function |
  */
 UT_ADD_TEST(VTS_L1_AudioSink, start_neg)
 {
@@ -1732,6 +1760,12 @@ UT_ADD_TEST(VTS_L1_AudioSink, start_neg)
 
         //set state to READY by invoking `open` (set-up)
         AUDIOSINK_OPEN_SUCCESS(audioSink, ContentType::UNKNOWN, controllerListener, audioSinkController, true);
+
+        // Start the audio sink wihtout assigning an audio decoder
+        AUDIOSINK_START_FAILURE(audioSink, audioSinkController, Status::EX_ILLEGAL_STATE);
+
+        // set the audio decoder for the audio sink controller
+        AUDIOSINK_SETAUDIODECODER_SUCCESS(audioSinkController, IAudioDecoder::Id::EXTERNAL);
 
         // Transition to a non-READY state (e.g., STARTED)
         AUDIOSINK_START_SUCCESS(audioSink, audioSinkController, true);
@@ -1791,6 +1825,9 @@ UT_ADD_TEST(VTS_L1_AudioSink, stop_pos)
         //set state to READY by invoking `open` (set-up)
         AUDIOSINK_OPEN_SUCCESS(audioSink, ContentType::UNKNOWN, controllerListener, audioSinkController, true);
 
+        // set the audio decoder for the audio sink controller
+        AUDIOSINK_SETAUDIODECODER_SUCCESS(audioSinkController, IAudioDecoder::Id::EXTERNAL);
+
         // Transition to a non-READY state (e.g., STARTED)
         AUDIOSINK_START_SUCCESS(audioSink, audioSinkController, true);
 
@@ -1848,6 +1885,9 @@ UT_ADD_TEST(VTS_L1_AudioSink, stop_neg)
 
         //Stop the Audio sink in non STARTED state
         AUDIOSINK_STOP_FAILURE(audioSinkController, Status::EX_ILLEGAL_STATE);
+
+        // set the audio decoder for the audio sink controller
+        AUDIOSINK_SETAUDIODECODER_SUCCESS(audioSinkController, IAudioDecoder::Id::EXTERNAL);
 
         // Transition to a non-READY state (e.g., STARTED)
         AUDIOSINK_START_SUCCESS(audioSink, audioSinkController, true);
@@ -1936,6 +1976,9 @@ UT_ADD_TEST(VTS_L1_AudioSink, queueAudioFrame_neg)
         // Log the API call in Ready state
         AUDIOSINK_QUEUEAUDIOFRAME_FAILURE(audioSinkController, nsPresentationTime, bufferHandle, metadata, Status::EX_ILLEGAL_STATE);
 
+        // set the audio decoder for the audio sink controller
+        AUDIOSINK_SETAUDIODECODER_SUCCESS(audioSinkController, IAudioDecoder::Id::EXTERNAL);
+
         // Transition to a non-READY state (e.g., STARTED)
         AUDIOSINK_START_SUCCESS(audioSink, audioSinkController, true);
 
@@ -1987,6 +2030,9 @@ UT_ADD_TEST(VTS_L1_AudioSink, signalEndOfStream_pos)
 
         /* Open the sink */
         AUDIOSINK_OPEN_SUCCESS(audioSink, ContentType::UNKNOWN, controllerListener, audioSinkController, true);
+
+        // set the audio decoder for the audio sink controller
+        AUDIOSINK_SETAUDIODECODER_SUCCESS(audioSinkController, IAudioDecoder::Id::EXTERNAL);
 
         /* Start the sink */
         AUDIOSINK_START_SUCCESS(audioSink, audioSinkController, true);
@@ -2041,6 +2087,9 @@ UT_ADD_TEST(VTS_L1_AudioSink, signalEndOfStream_neg)
 
         /* signalEndOfStream() must fail when not in STARTED state */
         AUDIOSINK_SIGNAL_ENDOFSTREAM_FAILURE(audioSinkController, Status::EX_ILLEGAL_STATE);
+
+        // set the audio decoder for the audio sink controller
+        AUDIOSINK_SETAUDIODECODER_SUCCESS(audioSinkController, IAudioDecoder::Id::EXTERNAL);
 
         /* Start the sink */
         AUDIOSINK_START_SUCCESS(audioSink, audioSinkController, true);
@@ -2099,6 +2148,9 @@ UT_ADD_TEST(VTS_L1_AudioSink, flush_pos)
 
         //set state to READY by invoking `open` (set-up)
         AUDIOSINK_OPEN_SUCCESS(audioSink, ContentType::UNKNOWN, controllerListener, audioSinkController, true);
+
+        // set the audio decoder for the audio sink controller
+        AUDIOSINK_SETAUDIODECODER_SUCCESS(audioSinkController, IAudioDecoder::Id::EXTERNAL);
 
         // Transition to a non-READY state (e.g., STARTED)
         AUDIOSINK_START_SUCCESS(audioSink, audioSinkController, true);
@@ -2159,6 +2211,9 @@ UT_ADD_TEST(VTS_L1_AudioSink, flush_neg)
 
         // Transition to a non-READY state (e.g., STARTED)
         AUDIOSINK_FLUSH_FAILURE(audioSinkController, Status::EX_ILLEGAL_STATE);
+
+        // set the audio decoder for the audio sink controller
+        AUDIOSINK_SETAUDIODECODER_SUCCESS(audioSinkController, IAudioDecoder::Id::EXTERNAL);
 
         // Transition to a non-READY state (e.g., STARTED)
         AUDIOSINK_START_SUCCESS(audioSink, audioSinkController, true);
@@ -2231,6 +2286,9 @@ UT_ADD_TEST(VTS_L1_AudioSink, getVolume_pos)
 
         //comparing set and get volume
         UT_ASSERT_EQUAL(volumeSet.volume, volumeGet.volume);
+
+        // set the audio decoder for the audio sink controller
+        AUDIOSINK_SETAUDIODECODER_SUCCESS(audioSinkController, IAudioDecoder::Id::EXTERNAL);
 
         // Ensure the audio sink is in State::STARTED
         AUDIOSINK_START_SUCCESS(audioSink, audioSinkController, true);
@@ -2310,6 +2368,9 @@ UT_ADD_TEST(VTS_L1_AudioSink, setVolume_pos)
         //comparing set and get volume
         UT_ASSERT_EQUAL(volumeSet.volume, volumeGet.volume);
 
+        // set the audio decoder for the audio sink controller
+        AUDIOSINK_SETAUDIODECODER_SUCCESS(audioSinkController, IAudioDecoder::Id::EXTERNAL);
+
         // Ensure the audio sink is in State::STARTED
         AUDIOSINK_START_SUCCESS(audioSink, audioSinkController, true);
 
@@ -2380,6 +2441,9 @@ UT_ADD_TEST(VTS_L1_AudioSink, setVolume_neg)
         volumeSet.muted = false; // Using the specified input
         AUDIOSINK_SETVOLUME_FAILURE(audioSinkController, volumeSet, Status::EX_NONE);
 
+        // set the audio decoder for the audio sink controller
+        AUDIOSINK_SETAUDIODECODER_SUCCESS(audioSinkController, IAudioDecoder::Id::EXTERNAL);
+
         // Ensure the audio sink is in State::STARTED
         AUDIOSINK_START_SUCCESS(audioSink, audioSinkController, true);
 
@@ -2444,6 +2508,9 @@ UT_ADD_TEST(VTS_L1_AudioSink, setVolumeRamp_pos)
 
         //set state to READY by invoking `open` (set-up)
         AUDIOSINK_OPEN_SUCCESS(audioSink, ContentType::UNKNOWN, controllerListener, audioSinkController, true);
+
+        // set the audio decoder for the audio sink controller
+        AUDIOSINK_SETAUDIODECODER_SUCCESS(audioSinkController, IAudioDecoder::Id::EXTERNAL);
 
         // Ensure the audio sink is in State::STARTED
         AUDIOSINK_START_SUCCESS(audioSink, audioSinkController, true);
@@ -2514,6 +2581,9 @@ UT_ADD_TEST(VTS_L1_AudioSink, setVolumeRamp_neg)
 
         //set state to READY by invoking `open` (set-up)
         AUDIOSINK_OPEN_SUCCESS(audioSink, ContentType::UNKNOWN, controllerListener, audioSinkController, true);
+
+        // set the audio decoder for the audio sink controller
+        AUDIOSINK_SETAUDIODECODER_SUCCESS(audioSinkController, IAudioDecoder::Id::EXTERNAL);
 
         // Ensure the audio sink is in State::STARTED
         AUDIOSINK_START_SUCCESS(audioSink, audioSinkController, true);
