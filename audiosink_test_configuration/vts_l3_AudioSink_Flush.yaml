@@ -20,12 +20,12 @@
 # *
 #** ******************************************************************************
 
-audiodecoder:
+audiosink:
   stream_download_path: "http://<>/streams" #`URL` path to download the audio test streams
   input_streams_path: "assets/streams/input" #Target path where input streams are stored
   reference_streams_path: "assets/streams/reference/" #Target path for reference PCM streams
   L3: #Test Level
-    Decode_EOS: #Test Name
+    Sink_Flush: #Test Name
       Controls:
         delay_between_decode_calls: -1 # Insert delay in msec between each `decodeBuffer()` call
         stop_start_pts: -1 #`pts` value in nano seconds at which the decoder should be stopped and restarted during the test. -1 indicates that decoder should not be restarted
@@ -33,8 +33,8 @@ audiodecoder:
         flush_pts: -1 #`pts` value in nano seconds that determine when the test should flush the decoder. -1 indicates that test should not flush
         flush_reset_pts: -1 #`pts` value in nano seconds that determine when the test should flush with reset the decoder. -1 indicates that test should not flush
         eos_pts: -1 #`pts` value in nano seconds that determine when the test should sent `eos` signal to decoder. -1 indicates that test should not signal `eos`
-        sink_eos_pts: 12800000
-        sink_flush_pts: -1
+        sink_eos_pts: -1
+        sink_flush_pts: 42666666
       Inputs:
         Streams:
           - Name: tones_48k_2_256_long_aac

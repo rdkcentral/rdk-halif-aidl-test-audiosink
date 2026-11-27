@@ -103,7 +103,6 @@ const ut_control_keyStringMapping_t audiosinkProperty_mapTable[] =
     {"QUEUE_DEPTH_NS",    (int32_t) audiosink::Property::QUEUE_DEPTH_NS},
     {"MIXER_ID",          (int32_t) audiosink::Property::MIXER_ID},
     {"AV_SOURCE",         (int32_t) audiosink::Property::AV_SOURCE},
-    {"DOLBY_ATMOS_LOCK",  (int32_t) audiosink::Property::DOLBY_ATMOS_LOCK},
     {"METRIC_xxxx",       (int32_t) audiosink::Property::METRIC_xxxx},
     {NULL, -1}
 };
@@ -168,11 +167,23 @@ void vts_audiosink_helper_validatePlatformCapabilities(const audiosink::Platform
     /* checking lowlatency support from getPlatformCapabilities() and hfp platformcapabilites */
     UT_ASSERT_EQUAL(platformCapsHFP.supportsLowLatency, capabilities.supportsLowLatency);
 
-    /* checking samplerate support from getPlatformCapabilities() and hfp platformcapabilites */
-    UT_ASSERT_EQUAL(platformCapsHFP.systemMixerSampleRateHz, capabilities.systemMixerSampleRateHz);
+    /* checking supported sample rates from getPlatformCapabilities() and hfp platformcapabilites (order independent) */
+    {
+        std::vector<int32_t> expected = platformCapsHFP.supportedSampleRatesHz;
+        std::vector<int32_t> actual   = capabilities.supportedSampleRatesHz;
+        std::sort(expected.begin(), expected.end());
+        std::sort(actual.begin(), actual.end());
+        UT_ASSERT_TRUE(expected == actual);
+    }
 
-    /* checking mixer pcmformat from getPlatformCapabilities() and hfp platformcapabilites */
-    UT_ASSERT_EQUAL(platformCapsHFP.systemMixerPCMFormat, capabilities.systemMixerPCMFormat);
+    /* checking supported pcm formats from getPlatformCapabilities() and hfp platformcapabilites (order independent) */
+    {
+        std::vector<audiodecoder::PCMFormat> expected = platformCapsHFP.supportedPCMFormats;
+        std::vector<audiodecoder::PCMFormat> actual   = capabilities.supportedPCMFormats;
+        std::sort(expected.begin(), expected.end());
+        std::sort(actual.begin(), actual.end());
+        UT_ASSERT_TRUE(expected == actual);
+    }
 
     /* checking supports PlanarFormat from getPlatformCapabilities() and hfp platformcapabilites */
     UT_ASSERT_EQUAL(platformCapsHFP.supportsPlanarFormat, capabilities.supportsPlanarFormat);
@@ -264,9 +275,7 @@ bool vts_audiosink_helper_validatePropertyValue(int sink_id, const std::optional
                 break;
             case PropertyValue::Value::Tag::stringValue:
             {
-                android::String16 string16Val = propVal.get<PropertyValue::Value::Tag::stringValue>();
-                android::String8 string8Val(string16Val);  // Convert String16 to String8
-                val = std::string(string8Val.string());    // Convert String8 to std::string
+                val = propVal.get<PropertyValue::Value::Tag::stringValue>();  // std::string (@utf8InCpp)
             }
                 break;
             case PropertyValue::Value::Tag::booleanValue:
@@ -315,10 +324,6 @@ bool vts_audiosink_helper_validatePropertyValue(int sink_id, const std::optional
         case audiosink::Property::MIXER_ID:
             return std::holds_alternative<std::int32_t>(val) &&
                    (std::get<std::int32_t>(val) == 0 || std::get<std::int32_t>(val) >= 1);
-
-        case audiosink::Property::DOLBY_ATMOS_LOCK:
-            return std::holds_alternative<int32_t>(val) &&
-                   (std::get<int32_t>(val) == 0 || std::get<int32_t>(val) == 1);
 
         default:
             return true;

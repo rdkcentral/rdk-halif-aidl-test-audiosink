@@ -92,8 +92,6 @@ static std::multimap<audiosink::Property, int32_t> validIntPropertyReady =
     {audiosink::Property::AV_SOURCE, int32_t(static_cast<int32_t>(AVSource::TUNER))},
     {audiosink::Property::AV_SOURCE, int32_t(static_cast<int32_t>(AVSource::SYSTEM))},
     {audiosink::Property::AV_SOURCE, int32_t(static_cast<int32_t>(AVSource::HDMI_1))},
-    {audiosink::Property::DOLBY_ATMOS_LOCK, 0},
-    {audiosink::Property::DOLBY_ATMOS_LOCK, 1},
 };
 
 /* Test class registration with UT_Core */
@@ -211,7 +209,7 @@ UT_ADD_TEST(VTS_L2_AudioSink, TestReadWriteProperties)
             setValue.value = PropertyValue::Value::make<PropertyValue::Value::Tag::intValue>(value);
 
             /* Set the property and value*/
-            AUDIOSINK_SETPROPERTY_SUCCESS(audioSink, property, setValue);
+            AUDIOSINK_SETPROPERTY_SUCCESS(audioSinkController, property, setValue);
 
             /* Get the resource ID */
             AUDIOSINK_GET_PROPERTY_SUCCESS(audioSink, property, resource_id);
@@ -251,6 +249,9 @@ UT_ADD_TEST(VTS_L2_AudioSink, TestStateTransition)
                                      com::rdk::hal::audiosink::State::CLOSED,
                                      com::rdk::hal::audiosink::State::OPENING,
                                      com::rdk::hal::audiosink::State::READY);
+
+        // set the audio decoder for the audio sink controller
+        AUDIOSINK_SETAUDIODECODER_SUCCESS(audioSinkController, IAudioDecoder::Id::EXTERNAL);
 
         // Start the audio sink
         AUDIOSINK_START_SUCCESS(audioSink, audioSinkController, false);
@@ -318,6 +319,9 @@ UT_ADD_TEST(VTS_L2_AudioSink, TestAudioSinkVolumeControl)
             UT_ASSERT_EQUAL(setVol.volume, currentVol.volume);
             UT_ASSERT_EQUAL(setVol.muted, currentVol.muted);
         }
+
+        // set the audio decoder for the audio sink controller
+        AUDIOSINK_SETAUDIODECODER_SUCCESS(audioSinkController, IAudioDecoder::Id::EXTERNAL);
 
         // Set and verify volume in started state
         AUDIOSINK_START_SUCCESS(audioSink, audioSinkController, true);
@@ -399,6 +403,9 @@ UT_ADD_TEST(VTS_L2_AudioSink, TestAudioSinkMuteUnmute)
             UT_ASSERT_EQUAL(setVol.muted, currentVol.muted);
         }
 
+        // set the audio decoder for the audio sink controller
+        AUDIOSINK_SETAUDIODECODER_SUCCESS(audioSinkController, IAudioDecoder::Id::EXTERNAL);
+
         // set and verify volume in started state
         AUDIOSINK_START_SUCCESS(audioSink, audioSinkController, true);
         for (double volume = 0.1; volume <= 1.0; volume += 0.1)
@@ -463,6 +470,9 @@ UT_ADD_TEST(VTS_L2_AudioSink, TestAudioSinkVolumeRamp)
         //set state to READY by invoking `open` (set-up)
         AUDIOSINK_OPEN_SUCCESS(audioSink, ContentType::UNKNOWN, controlListener, audioSinkController, true);
 
+        // set the audio decoder for the audio sink controller
+        AUDIOSINK_SETAUDIODECODER_SUCCESS(audioSinkController, IAudioDecoder::Id::EXTERNAL);
+
         // Start the audio sink
         AUDIOSINK_START_SUCCESS(audioSink, audioSinkController, true);
 
@@ -521,6 +531,9 @@ UT_ADD_TEST(VTS_L2_AudioSink, TestAudioSinkVolumeRampMute)
 
         //set state to READY by invoking `open` (set-up)
         AUDIOSINK_OPEN_SUCCESS(audioSink, ContentType::UNKNOWN, controlListener, audioSinkController, true);
+
+        // set the audio decoder for the audio sink controller
+        AUDIOSINK_SETAUDIODECODER_SUCCESS(audioSinkController, IAudioDecoder::Id::EXTERNAL);
 
         // Start the audio sink
         AUDIOSINK_START_SUCCESS(audioSink, audioSinkController, true);
@@ -586,6 +599,9 @@ UT_ADD_TEST(VTS_L2_AudioSink, TestAudioSinkVolumeRampTwice)
 
         //set state to READY by invoking `open` (set-up)
         AUDIOSINK_OPEN_SUCCESS(audioSink, ContentType::UNKNOWN, controlListener, audioSinkController, true);
+
+        // set the audio decoder for the audio sink controller
+        AUDIOSINK_SETAUDIODECODER_SUCCESS(audioSinkController, IAudioDecoder::Id::EXTERNAL);
 
         // Start the audio sink
         AUDIOSINK_START_SUCCESS(audioSink, audioSinkController, true);
@@ -659,6 +675,9 @@ UT_ADD_TEST(VTS_L2_AudioSink, TestStopAudioSinkVolRampProgress)
         int32_t overMs = 10000;
         std::vector<VolumeRamp> volumeRamps = {VolumeRamp::LINEAR, VolumeRamp::IN_CUBIC, VolumeRamp::OUT_CUBIC};
 
+        // set the audio decoder for the audio sink controller
+        AUDIOSINK_SETAUDIODECODER_SUCCESS(audioSinkController, IAudioDecoder::Id::EXTERNAL);
+
         for (auto& volumeRamp : volumeRamps)
         {
             currentVol.volume = 0.0; //reset volume to zero
@@ -722,6 +741,9 @@ UT_ADD_TEST(VTS_L2_AudioSink, TestClockAttachDetach)
             // Detach the clock
             AUDIOSINK_DETACHCLOCK_SUCCESS(audioSinkController);
         }
+
+        // set the audio decoder for the audio sink controller
+        AUDIOSINK_SETAUDIODECODER_SUCCESS(audioSinkController, IAudioDecoder::Id::EXTERNAL);
 
         // Transition to a non-READY state (e.g., STARTED)
         AUDIOSINK_START_SUCCESS(audioSink, audioSinkController, true);
